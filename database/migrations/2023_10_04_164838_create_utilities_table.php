@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customers', function (Blueprint $table) {
+        Schema::create('utilities', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
+            $table->time('start_time')->default('00:00:00');
+            $table->time('end_time')->default('23:59:59');
+            $table->longText('description')->nullable();
+            $table->string('charge')->nullable();
+            $table->integer('sort')->nullable();
             $table->boolean('active')->default(true);
             $table->timestamps();
         });
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('customers');
+        Schema::dropIfExists('utilities');
     }
 };

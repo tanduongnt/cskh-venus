@@ -44,10 +44,6 @@ return [
             'driver' => 'session',
             'provider' => 'customers',
         ],
-        'api_user' => [
-            'driver' => 'passport',
-            'provider' => 'users',
-        ],
         'api' => [
             'driver' => 'passport',
             'provider' => 'customers',
@@ -115,7 +111,7 @@ return [
         ],
         'customers' => [
             'provider' => 'customers',
-            'table' => 'password_resets',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

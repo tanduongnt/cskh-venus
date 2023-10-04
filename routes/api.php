@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Customer\AuthController;
 
@@ -25,6 +27,12 @@ Route::middleware(['auth:api'])->group(function () {
     });
 });
 
-Route::middleware(['guest'])->group(function () {
+Route::middleware(['guest', 'api'])->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
+});
+
+Route::fallback(function () {
+    return response([
+        'message' => __('Not Found.'),
+    ], Response::HTTP_NOT_FOUND);
 });

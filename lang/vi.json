@@ -1,0 +1,48 @@
+{
+    "Loading": "Đang tải dữ liệu",
+    "Please wait": "Vui lòng chờ",
+    "Processing": "Đang thực hiện",
+
+    "This is a secure area of the application. Please confirm your password before continuing.": "Đây là khu vực bảo mật, vui lòng nhập mật khẩu để tiếp tục.",
+
+    "The :attribute may not be greater than :size MB": ":attribute không được lớn hơn :size MB",
+    "The :attribute must be at least :length characters.": ":attribute phải có ít nhất :length kí tự.",
+    "The :attribute must contain at least one letter.": ":attribute phải có ít nhất một chữ cái.",
+    "The :attribute must contain at least one number.": ":attribute phải có ít nhất một số.",
+    "The :attribute must contain at least one symbol.": ":attribute phải có ít nhất một kí tự đặc biệt.",
+    "The :attribute must contain at least one uppercase and one lowercase letter.": ":attribute phải có ít nhất một chữ cái viết hoa và một chữ cái viết thường.",
+    "The given :attribute has appeared in a data leak. Please choose a different :attribute.": ":attribute vừa nhập đã xuất hiện trong một vụ rò rỉ dữ liệu. Vui lòng nhập giá trị khác.",
+
+    "Unauthorized.": "Chưa đăng nhập, từ chối truy cập.",
+    "Too Many Requests.": "Yêu cầu quá nhiều lần.",
+    "Page Expired.": "Trang này đã hết hạn truy cập.",
+    "Sorry, we can't find that page.": "Xin lỗi, trang này không tồn tại.",
+    "Sorry, your account has been banned.": "Xin lỗi, tài khoản của bạn đã bị khóa.",
+    "Sorry, you don't have permission to access this page.": "Xin lỗi, bạn không có quyền truy cập trang này.",
+    "Sorry, something went wrong on our server.": "Xin lỗi, đã có sự cố xảy ra trên máy chủ.",
+    "Service Unavailable.": "Dịch vụ không khả dụng.",
+
+    "You are offline.": "Không có kết nối internet.",
+    "Cannot tracking user location.": "Không thể xác định vị trí người dùng.",
+
+    "Hello!": "Xin chào!",
+    "Regards": "Trân trọng",
+
+    "Resend Verification Email": "Gửi lại thư xác thực",
+    "A new verification link has been sent to your email address.": "Thư xác thực đã được gửi tới email của bạn.",
+
+    "Reset Password Notification": "Quên mật khẩu",
+    "You are receiving this email because we received a password reset request for your account.": "Bạn nhận được thư này bởi vì chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.",
+
+    "Reset Password": "Đặt lại mật khẩu",
+    "Use 8 or more characters with a mix of letters, numbers & symbols.": "Sử dụng tối thiểu 8 kí tự kết hợp chữ cái, số và kí tự đặc biệt.",
+    "This password reset link will expire in :count minutes.": "Yêu cầu này sẽ hết hạn sau :count phút.",
+    "If you did not request a password reset, no further action is required.": "Nếu không phải bạn gửi yêu cầu, không cần thực hiện gì cả.",
+
+    "Verify Email Address": "Xác nhận Email",
+    "Before getting started, you must verify your email address. If you didn't receive the email, we will gladly send you another.": "Trước khi bắt đầu sử dụng, vui lòng xác thực địa chỉ email của bạn. Nếu chưa nhận được email, vui lòng nhấn nút bên dưới.",
+    "Please click the button below to verify your email address.": "Nhấn vào nút bên dưới để xác nhận địa chỉ email của bạn.",
+    "If you did not create an account, no further action is required.": "Nếu bạn không sử dụng tài khoản này, không cần thực hiện gì cả.",
+
+    "If you're having trouble clicking the \":actionText\" button, copy and paste the URL below\ninto your web browser:": "Nếu nút \":actionText\" không hoạt động, hãy copy và dán địa chỉ bên dưới vào trình duyệt của bạn:"
+}

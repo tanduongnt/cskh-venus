@@ -2,8 +2,12 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Auth\AuthenticationException;
 
 class Handler extends ExceptionHandler
 {
@@ -23,6 +27,27 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
+        $this->renderable(function (Throwable $ex, Request $request) {
+            if ($request->is('api/*')) {
+                if (!$ex instanceof ValidationException) {
+                    if ($ex instanceof AuthenticationException) {
+                        return response()->json([
+                            'error' => true,
+                            'message' => __('auth.token'),
+                        ], Response::HTTP_UNAUTHORIZED);
+                    } else {
+                        return response()->json([
+                            'error' => true,
+                            'name' => get_class($ex),
+                            'code' => $ex->getCode(),
+                            'message' => $ex->getMessage(),
+                            // 'trace' => $ex->getTrace()
+                        ], Response::HTTP_INTERNAL_SERVER_ERROR);
+                    }
+                }
+            }
+        });
+
         $this->reportable(function (Throwable $e) {
             //
         });

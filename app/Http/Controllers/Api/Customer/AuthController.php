@@ -10,10 +10,14 @@ use App\Http\Controllers\ApiController;
 
 class AuthController extends ApiController
 {
+    public function __construct() {
+        Auth::setDefaultDriver('customer');
+    }
+
     public function login(LoginRequest $request)
     {
         $data = $request->only(['email', 'password']);
-        if (auth()->attempt($data)) {
+        if (Auth::attempt($data)) {
             $customer = Auth::user();
             $token = $customer->createToken('API')->accessToken;
             return $this->success(array_merge($customer->toArray(), [
@@ -26,7 +30,7 @@ class AuthController extends ApiController
     public function user(Request $request)
     {
         $token = $request->bearerToken();
-        $user = $request->user()->load(['roles:id,name,display_name', 'permissions:id,name,display_name']);
+        $user = $request->user();
         return $this->success(array_merge($user->toArray(), [
             'token' => $token,
         ]));
