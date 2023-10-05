@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('utilities', function (Blueprint $table) {
+        Schema::create('operating_times', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name');
-            $table->longText('description')->nullable();
-            $table->integer('sort')->nullable();
-            $table->boolean('active')->default(true);
+            $table->time('start_time')->default('00:00:00');
+            $table->time('end_time')->default('23:59:59');
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('utilities');
+        Schema::dropIfExists('operating_times');
     }
 };

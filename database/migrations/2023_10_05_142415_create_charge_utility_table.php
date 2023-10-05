@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('utilities', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-            $table->longText('description')->nullable();
-            $table->integer('sort')->nullable();
-            $table->boolean('active')->default(true);
+        Schema::create('charge_utility', function (Blueprint $table) {
+            $table->foreignUuid('charge_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignUuid('utility_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
             $table->timestamps();
+            $table->unique(['charge_id', 'utility_id']);
         });
     }
 
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('utilities');
+        Schema::dropIfExists('charge_utility');
     }
 };

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Building extends Model
 {
@@ -35,8 +36,8 @@ class Building extends Model
         return $this->hasMany(Apartment::class);
     }
 
-    public function utilities(): HasMany
+    public function utilities(): BelongsToMany
     {
-        return $this->hasMany(Utility::class);
+        return $this->belongsToMany(Utility::class);
     }
 }

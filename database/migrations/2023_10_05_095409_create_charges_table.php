@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('utilities', function (Blueprint $table) {
+        Schema::create('charges', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
+            $table->integer('price')->nullable();
             $table->longText('description')->nullable();
             $table->integer('sort')->nullable();
-            $table->boolean('active')->default(true);
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('utilities');
+        Schema::dropIfExists('charges');
     }
 };
