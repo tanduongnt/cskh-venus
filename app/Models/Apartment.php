@@ -31,7 +31,12 @@ class Apartment extends Model
         return $this->belongsTo(Building::class);
     }
 
-    public function customers(): BelongsToMany
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'owner_id');
+    }
+
+    public function members(): BelongsToMany
     {
         return $this->belongsToMany(Customer::class);
     }

@@ -13,7 +13,12 @@ return new class extends Migration
     {
         Schema::create('utilities', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->foreignUuid('building_id')->constrained();
+            $table->foreignUuid('utility_type_id')->constrained();
             $table->string('name');
+            $table->time('start_time');
+            $table->time('end_time');
+            $table->integer('block');
             $table->longText('description')->nullable();
             $table->integer('sort')->nullable();
             $table->boolean('active')->default(true);

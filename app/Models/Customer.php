@@ -19,6 +19,7 @@ class Customer extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
     ];
 
@@ -31,6 +32,11 @@ class Customer extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function house(): HasMany
+    {
+        return $this->hasMany(Apartment::class);
+    }
 
     public function apartments(): BelongsToMany
     {

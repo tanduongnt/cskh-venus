@@ -38,7 +38,7 @@ class ChildResourceLink extends TextColumn
     {
         return Str::title($this->resourceClass::getModelLabel());
     }
-    
+
 
     // Phương thức thiết lập giá trị cho thuộc tính $resouceClass
     public function forResource(string $resourceClass): static
@@ -52,6 +52,7 @@ class ChildResourceLink extends TextColumn
     public function getState(): string
     {
         $count = $this->getCount();
+
         //$state = 'Hệ thống';
 
         //return $state;

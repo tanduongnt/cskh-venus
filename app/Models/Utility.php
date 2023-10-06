@@ -14,9 +14,26 @@ class Utility extends Model
     use HasFactory;
     use HasUuids;
 
-    public function buildings(): BelongsToMany
+    protected $fillable = [
+        'building_id',
+        'utility_type_id',
+        'name',
+        'start_time',
+        'end_time',
+        'block',
+        'description',
+        'sort',
+        'active',
+    ];
+
+    protected $casts = [
+        'active' => 'boolean',
+    ];
+
+
+    public function building(): BelongsTo
     {
-        return $this->belongsToMany(Building::class);
+        return $this->belongsTo(Building::class);
     }
 
     public function operatingTimes(): BelongsToMany
@@ -27,5 +44,10 @@ class Utility extends Model
     public function utilitiesRegistration(): HasMany
     {
         return $this->hasMany(UtilityRegistration::class);
+    }
+
+    public function utilityType(): BelongsTo
+    {
+        return $this->belongsTo(UtilityType::class);
     }
 }
