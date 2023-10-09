@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('apartments', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('building_id')->constrained();
-            $table->foreignUuid('owner_id')->constrained('customers');
             $table->string('name');
             $table->string('code');
             $table->longText('description')->nullable();

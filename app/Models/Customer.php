@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Laravel\Passport\HasApiTokens;
+use App\Enums\ApartmentCustomerRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -33,18 +34,23 @@ class Customer extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function house(): HasMany
-    {
-        return $this->hasMany(Apartment::class);
-    }
-
     public function apartments(): BelongsToMany
     {
         return $this->belongsToMany(Apartment::class);
     }
 
-    public function utilitiesRegistration(): HasMany
+    public function owns(): BelongsToMany
     {
-        return $this->hasMany(UtilityRegistration::class);
+        return $this->belongsToMany(Apartment::class)->withPivot(['role'])->wherePivot('role', ApartmentCustomerRole::OWNER);
     }
+
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(Apartment::class)->withPivot(['role'])->wherePivot('role', ApartmentCustomerRole::MEMBER);
+    }
+
+    // public function apartmentCustomers(): HasMany
+    // {
+    //     return $this->hasMany(ApartmentCustomer::class);
+    // }
 }

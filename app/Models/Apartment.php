@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApartmentCustomerRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -31,13 +32,23 @@ class Apartment extends Model
         return $this->belongsTo(Building::class);
     }
 
-    public function owner(): BelongsTo
+    public function customers(): BelongsToMany
     {
-        return $this->belongsTo(Customer::class, 'owner_id');
+        return $this->belongsToMany(Customer::class)->withPivot(['role', 'customer_id']);
+    }
+
+    public function owners(): BelongsToMany
+    {
+        return $this->belongsToMany(Customer::class)->withPivot(['role'])->wherePivot('role', ApartmentCustomerRole::OWNER);
     }
 
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class);
+        return $this->belongsToMany(Customer::class)->withPivot(['role'])->wherePivot('role', ApartmentCustomerRole::MEMBER);
     }
+
+    // public function apartmentCustomers(): HasMany
+    // {
+    //     return $this->hasMany(ApartmentCustomer::class);
+    // }
 }

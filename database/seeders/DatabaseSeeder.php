@@ -39,7 +39,6 @@ class DatabaseSeeder extends Seeder
 
         $apartment = \App\Models\Apartment::create([
             'building_id' => $building->id,
-            'owner_id' => $customer->id,
             'name' => 'Căn hộ 1',
             'code'  => 'CH1',
             'active' => true,

@@ -2,21 +2,29 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use App\Filament\Admin\Pages\Customer;
+use App\Filament\Admin\Resources\BuildingResource;
+use App\Filament\Admin\Resources\CustomerResource;
+use App\Filament\Admin\Resources\UtilityTypeResource;
+use App\Models\Building;
 use Filament\Pages;
 use Filament\Panel;
-use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Widgets;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Filament\PanelProvider;
+use Filament\Pages\Dashboard;
+use Filament\Support\Colors\Color;
+use Filament\Navigation\NavigationItem;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Navigation\NavigationBuilder;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
-use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -31,15 +39,32 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
+            ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->navigationGroups([
-                'Admin',
-                'Customer'
+            ->navigationItems([
+                NavigationItem::make('buildings')
+                    ->url(fn (): string => BuildingResource::getUrl())
+                    ->icon('heroicon-o-presentation-chart-line')
+                    ->sort(3)
+                    ->label('Chung cư'),
+            ])
+            ->navigationItems([
+                NavigationItem::make('utilityTypes')
+                    ->url(fn (): string => UtilityTypeResource::getUrl())
+                    ->icon('heroicon-o-presentation-chart-line')
+                    ->sort(3)
+                    ->label('Loại tiện ích'),
+            ])
+            ->navigationItems([
+                NavigationItem::make('customer')
+                    ->url(fn (): string => CustomerResource::getUrl())
+                    ->icon('heroicon-o-presentation-chart-line')
+                    ->sort(3)
+                    ->label('Khách hàng'),
             ])
             ->widgets([
                 Widgets\AccountWidget::class,
