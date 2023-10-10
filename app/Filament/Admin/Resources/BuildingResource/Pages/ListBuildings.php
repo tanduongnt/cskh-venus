@@ -10,6 +10,10 @@ class ListBuildings extends ListRecords
 {
     protected static string $resource = BuildingResource::class;
 
+    protected static ?string $title = 'Danh sách';
+
+    protected static ?string $breadcrumb = 'Danh sách';
+
     protected function getHeaderActions(): array
     {
         return [

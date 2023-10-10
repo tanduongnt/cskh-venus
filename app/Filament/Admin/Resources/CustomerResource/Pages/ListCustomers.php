@@ -10,10 +10,14 @@ class ListCustomers extends ListRecords
 {
     protected static string $resource = CustomerResource::class;
 
+    protected static ?string $title = 'Danh sách';
+
+    protected static ?string $breadcrumb = 'Danh sách';
+
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()->label('Thêm mới'),
         ];
     }
 }

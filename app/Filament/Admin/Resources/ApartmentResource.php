@@ -60,6 +60,7 @@ class ApartmentResource extends NestedResource
                     Hidden::make('building_id'),
                     TextInput::make('code')
                         ->required()
+                        ->unique()
                         ->label('Mã căn hộ'),
                     TextInput::make('name')
                         ->required()
@@ -82,10 +83,10 @@ class ApartmentResource extends NestedResource
     {
         return $table
             ->columns([
+                TextColumn::make('code')->label('Mã căn hộ')->sortable()->searchable(),
                 TextColumn::make('name')->label('Tên căn hộ')->sortable()->searchable(),
                 TextColumn::make('owners.name')->label('Chủ hộ')->sortable(),
-                TextColumn::make('members.name')->label('Thành viên')->sortable(),
-                TextColumn::make('members_count')->counts('members')->label('Thành viên')->sortable(),
+                TextColumn::make('customers_count')->counts('customers')->label('Nhân khẩu')->sortable(),
                 IconColumn::make('active')->boolean()->label('Hoạt động'),
             ])
             ->filters([

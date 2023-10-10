@@ -18,16 +18,25 @@ class CustomersRelationManager extends RelationManager
 {
     protected static string $relationship = 'customers';
 
+    protected static ?string $title = 'Thành viên';
+
     public function form(Form $form): Form
     {
         return $form
             ->schema([
                 Select::make('customer_id')
-                    ->options(Customer::all()->pluck('name'))
-                    ->required(),
+                    ->getSearchResultsUsing(function (string $search) {
+                        return Customer::where('name', 'LIKE', "%{$search}%")->limit(10)->pluck('name', 'id');
+                    })
+                    ->getOptionLabelUsing(fn ($value): ?string => Customer::find($value)?->name)
+                    ->required()
+                    ->label('Tên')
+                    ->searchable(),
                 Select::make('role')
                     ->options(ApartmentCustomerRole::class)
-                    ->required(),
+                    ->required()
+                    ->label('vai trò')
+                    ->native(false),
             ]);
     }
 
@@ -36,8 +45,8 @@ class CustomersRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('role'),
+                Tables\Columns\TextColumn::make('name')->label('Tên'),
+                Tables\Columns\TextColumn::make('role')->formatStateUsing(fn (string $state): string => __("member.{$state}"))->label('Tên'),
             ])
             ->filters([
                 //
@@ -47,13 +56,17 @@ class CustomersRelationManager extends RelationManager
                     $action->getRecordSelect(),
                     Forms\Components\Select::make('role')
                         ->options(ApartmentCustomerRole::class)
-                        ->required(),
-                ]),
+                        ->required()
+                        ->native(false),
+                ])
+                    ->label('Thêm mới')
+                    ->modalHeading('Thêm mới thành viên')
+                    ->modalSubmitActionLabel('Thêm mới')
+                    ->attachAnother(false),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DetachAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DetachAction::make()->label('Xóa')->modalHeading('Dữ liệu đã xóa không thể khôi phục'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

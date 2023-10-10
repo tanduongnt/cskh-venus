@@ -36,16 +36,6 @@ class Utility extends Model
         return $this->belongsTo(Building::class);
     }
 
-    public function operatingTimes(): BelongsToMany
-    {
-        return $this->belongsToMany(OperatingTime::class);
-    }
-
-    public function utilitiesRegistration(): HasMany
-    {
-        return $this->hasMany(UtilityRegistration::class);
-    }
-
     public function utilityType(): BelongsTo
     {
         return $this->belongsTo(UtilityType::class);

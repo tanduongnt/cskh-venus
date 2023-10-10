@@ -13,6 +13,10 @@ class ViewApartment extends ViewRecord
 
     protected static string $resource = ApartmentResource::class;
 
+    protected static ?string $title = 'Chi tiết';
+
+    protected static ?string $breadcrumb = 'Chi tiết';
+
     protected function getHeaderActions(): array
     {
         return [

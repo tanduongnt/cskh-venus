@@ -12,4 +12,8 @@ class CreateApartment extends CreateRecord
     use NestedPage;
 
     protected static string $resource = ApartmentResource::class;
+
+    protected static ?string $title = 'Thêm mới';
+
+    protected static ?string $breadcrumb = 'Thêm mới';
 }

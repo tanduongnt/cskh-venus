@@ -9,4 +9,8 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateBuilding extends CreateRecord
 {
     protected static string $resource = BuildingResource::class;
+
+    protected static ?string $title = 'Thêm mới';
+
+    protected static ?string $breadcrumb = 'Thêm mới';
 }

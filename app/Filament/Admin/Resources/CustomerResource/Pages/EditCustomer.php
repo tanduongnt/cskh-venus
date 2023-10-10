@@ -10,6 +10,10 @@ class EditCustomer extends EditRecord
 {
     protected static string $resource = CustomerResource::class;
 
+    protected static ?string $title = 'Chỉnh sửa';
+
+    protected static ?string $breadcrumb = 'Chỉnh sửa';
+
     protected function getHeaderActions(): array
     {
         return [

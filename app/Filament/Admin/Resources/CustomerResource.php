@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\CustomerResource\Pages;
 use App\Filament\Admin\Resources\CustomerResource\RelationManagers;
+use App\Models\Building;
 
 class CustomerResource extends Resource
 {
@@ -69,14 +70,25 @@ class CustomerResource extends Resource
             ->columns([
                 TextColumn::make('name')->label('Tên khách hàng')->sortable()->searchable(),
                 TextColumn::make('email')->label('Email')->sortable(),
-                TextColumn::make('apartment.name')->label('Căn hộ')->sortable(),
+                TextColumn::make('apartments.building.name')->label('Chung cư')->sortable(),
                 TextColumn::make('phone')->label('Điện thoại')->sortable(),
                 IconColumn::make('email_verified_at')->boolean()->label('Xác thực'),
                 IconColumn::make('active')->boolean()->label('Hoạt động'),
             ])
             ->filters([
-                // SelectFilter::make('')
-                //     ->relationship('author', 'name')
+                SelectFilter::make('buildings')
+                    ->query(function (Builder $query, array $data) {
+                        if ($data['value']) {
+                            $query->whereHas('buildings', function ($query) use ($data) {
+                                $query->where('buildings.id', $data['value']);
+                            });
+                        }
+                    })
+                    ->getSearchResultsUsing(function (string $search) {
+                        return Building::where('name', 'LIKE', "%{$search}%")->limit(10)->pluck('name', 'id');
+                    })
+                    ->getOptionLabelUsing(fn ($value): ?string => Building::find($value)?->name)
+                    ->searchable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

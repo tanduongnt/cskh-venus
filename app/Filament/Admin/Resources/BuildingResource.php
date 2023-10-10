@@ -11,15 +11,17 @@ use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Support\Enums\ActionSize;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Forms\Components\RichEditor;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Admin\Resources\UtilityResource;
 use App\Extend\Filament\Columns\ChildResourceLink;
-use App\Filament\Admin\Resources\BuildingResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Admin\Resources\BuildingResource\Pages;
 use App\Filament\Admin\Resources\BuildingResource\RelationManagers;
 
 class BuildingResource extends Resource
@@ -29,8 +31,6 @@ class BuildingResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $slug = 'buildings';
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?int $navigationSort = 1;
 
@@ -104,15 +104,17 @@ class BuildingResource extends Resource
                     ->url(fn (Building $record): string => UtilityResource::getUrl('index', ['building' => $record->id]))
                     ->openUrlInNewTab()
                     ->label('Tiện ích')
-                    ->icon('heroicon-o-bars-3')
+                    ->icon('bi-columns-gap')
                     ->color('info'),
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                ])->label('Tác vụ'),
             ]);
     }
 

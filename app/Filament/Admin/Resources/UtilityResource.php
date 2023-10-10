@@ -62,7 +62,8 @@ class UtilityResource extends NestedResource
                         ->relationship(name: 'utilityType', titleAttribute: 'name')
                         ->required()
                         ->label('Loại tiện ích')
-                        ->columnSpan('full'),
+                        ->columnSpan('full')
+                        ->native(false),
                     TextInput::make('name')
                         ->required()
                         ->label('Tên tiện ích')
@@ -107,9 +108,6 @@ class UtilityResource extends NestedResource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Action::make('blocks')
-                    ->url(fn (Utility $record): string => UtilityResource::getUrl('block', ['record' => $record->id]))
-                    ->openUrlInNewTab()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

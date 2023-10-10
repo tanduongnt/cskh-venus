@@ -16,6 +16,7 @@ class Customer extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
     use HasUuids;
+    use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
     protected $fillable = [
         'name',
@@ -49,8 +50,8 @@ class Customer extends Authenticatable
         return $this->belongsToMany(Apartment::class)->withPivot(['role'])->wherePivot('role', ApartmentCustomerRole::MEMBER);
     }
 
-    // public function apartmentCustomers(): HasMany
-    // {
-    //     return $this->hasMany(ApartmentCustomer::class);
-    // }
+    public function buildings()
+    {
+        return $this->hasManyDeep(Building::class, ['apartment_customer', Apartment::class], ['customer_id', 'id', 'id'], [null, 'apartment_id', 'building_id']);
+    }
 }
