@@ -9,9 +9,9 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Customer\Pages\Utility;
+use App\Filament\Customer\Pages\Dashboard;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Navigation\NavigationBuilder;
-use App\Filament\Dashboard\Pages\Dashboard;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -49,7 +49,6 @@ class CustomerPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Customer/Widgets'), for: 'App\\Filament\\Customer\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

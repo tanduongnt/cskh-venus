@@ -22,6 +22,7 @@ class Utility extends Page
     }
 
     public $utilities;
+    public $block;
 
     public function mount()
     {
@@ -32,6 +33,10 @@ class Utility extends Page
                 });
             });
         })->get();
-        dd($this->utilities);
+
+        foreach ($this->utilities as $key => $utility) {
+            $this->block = $utility->block;
+        }
+        //dd($this->utilities);
     }
 }

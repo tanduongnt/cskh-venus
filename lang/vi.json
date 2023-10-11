@@ -3,6 +3,10 @@
     "Please wait": "Vui lòng chờ",
     "Processing": "Đang thực hiện",
 
+    "Member": "Thành viên",
+    "Owner": "Chủ hộ",
+
+
     "This is a secure area of the application. Please confirm your password before continuing.": "Đây là khu vực bảo mật, vui lòng nhập mật khẩu để tiếp tục.",
 
     "The :attribute may not be greater than :size MB": ":attribute không được lớn hơn :size MB",

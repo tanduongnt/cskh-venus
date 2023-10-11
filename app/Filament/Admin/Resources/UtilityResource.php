@@ -78,7 +78,6 @@ class UtilityResource extends NestedResource
                         ->displayFormat('H:i:s'),
                     TextInput::make('block')
                         ->numeric()
-                        ->required()
                         ->label('Block (phút)'),
                     TextInput::make('sort')
                         ->nullable()

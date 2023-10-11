@@ -14,6 +14,11 @@ class EditBuilding extends EditRecord
 
     protected static ?string $breadcrumb = 'Chỉnh sửa';
 
+    protected function getRedirectUrl(): string
+    {
+        return $this->previousUrl ?? $this->getResource()::getUrl('index');
+    }
+
     protected function getHeaderActions(): array
     {
         return [

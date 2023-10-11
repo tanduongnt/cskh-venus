@@ -6,8 +6,8 @@ use Filament\Support\Contracts\HasLabel;
 
 enum ApartmentCustomerRole: string implements HasLabel
 {
-    case OWNER = 'owner';
-    case MEMBER = 'member';
+    case OWNER = 'Owner';
+    case MEMBER = 'Member';
 
     public function getLabel(): ?string
     {

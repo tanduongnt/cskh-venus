@@ -46,7 +46,7 @@ class CustomersRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Tên'),
-                Tables\Columns\TextColumn::make('role')->formatStateUsing(fn (string $state): string => __("member.{$state}"))->label('Tên'),
+                Tables\Columns\TextColumn::make('role')->formatStateUsing(fn (string $state): string => __($state))->label('Vai trò'),
             ])
             ->filters([
                 //
