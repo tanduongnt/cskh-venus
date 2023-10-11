@@ -36,6 +36,7 @@ class CustomerPanelProvider extends PanelProvider
             ])
             ->discoverResources(in: app_path('Filament/Customer/Resources'), for: 'App\\Filament\\Customer\\Resources')
             ->discoverPages(in: app_path('Filament/Customer/Pages'), for: 'App\\Filament\\Customer\\Pages')
+            ->discoverWidgets(in: app_path('Filament/Customer/Widgets'), for: 'App\\Filament\\Customer\\Widgets')
             ->pages([
                 Dashboard::class,
             ])
@@ -46,7 +47,6 @@ class CustomerPanelProvider extends PanelProvider
                     ->sort(3)
                     ->label('Đăng ký tiện ích'),
             ])
-            ->discoverWidgets(in: app_path('Filament/Customer/Widgets'), for: 'App\\Filament\\Customer\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
             ])

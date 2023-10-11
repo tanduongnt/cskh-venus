@@ -87,6 +87,8 @@ class BuildingResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->label('Tên chung cư')->sortable()->searchable(),
+                TextColumn::make('apartments_count')->counts('apartments')->label('Căn hộ')->sortable(),
+                TextColumn::make('utilities_count')->counts('utilities')->label('Tiện ích')->sortable(),
                 IconColumn::make('active')->boolean()->label('Vận hành'),
                 //ChildResourceLink::make(UtilityResource::class)->label('Hệ thống'),
             ])

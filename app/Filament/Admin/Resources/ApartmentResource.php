@@ -4,12 +4,14 @@ namespace App\Filament\Admin\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
+use Filament\Forms\Get;
 use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Models\Apartment;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Enums\ApartmentCustomerRole;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -18,6 +20,7 @@ use App\Extend\Filament\NestedResource;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Validation\Rules\Unique;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,7 +28,6 @@ use App\Filament\Admin\Resources\BuildingResource;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\ApartmentResource\Pages;
 use App\Filament\Admin\Resources\ApartmentResource\RelationManagers;
-use Filament\Forms\Components\Group;
 
 class ApartmentResource extends NestedResource
 {
@@ -60,7 +62,10 @@ class ApartmentResource extends NestedResource
                     Hidden::make('building_id'),
                     TextInput::make('code')
                         ->required()
-                        ->unique()
+                        ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
+                            $building_id = $get('building_id');
+                            return $rule->where('building_id', $building_id);
+                        }, ignoreRecord: true)
                         ->label('Mã căn hộ'),
                     TextInput::make('name')
                         ->required()

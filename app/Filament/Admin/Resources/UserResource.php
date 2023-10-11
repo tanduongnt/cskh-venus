@@ -3,32 +3,31 @@
 namespace App\Filament\Admin\Resources;
 
 use Filament\Forms;
+use App\Models\User;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
-use App\Models\UtilityType;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\RichEditor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Admin\Resources\UtilityTypeResource\Pages;
-use App\Filament\Admin\Resources\UtilityTypeResource\RelationManagers;
+use App\Filament\Admin\Resources\UserResource\Pages;
+use App\Filament\Admin\Resources\UserResource\RelationManagers;
 
-class UtilityTypeResource extends Resource
+class UserResource extends Resource
 {
-    protected static ?string $model = UtilityType::class;
+    protected static ?string $model = User::class;
 
-    protected static ?string $slug = 'utility-types';
+    protected static ?string $slug = 'users';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'name';
-
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -37,7 +36,7 @@ class UtilityTypeResource extends Resource
 
     public static function getPluralModelLabel(): string
     {
-        return 'Loại tiện ích';
+        return 'Nhân viên';
     }
 
     public static function form(Form $form): Form
@@ -47,17 +46,14 @@ class UtilityTypeResource extends Resource
                 Section::make()->schema([
                     TextInput::make('name')
                         ->required()
-                        ->label('Tên tiện ích')
-                        ->columnSpan(3),
-                    TextInput::make('sort')
-                        ->nullable()
-                        ->numeric()
-                        ->label('Sắp xếp'),
-                    RichEditor::make('description')
-                        ->nullable()
-                        ->label('Mô tả')
+                        ->label('Tên')
                         ->columnSpan('full'),
-                ])->columns(4),
+                    TextInput::make('email')
+                        ->required()
+                        ->label('Email')
+                        ->columnSpan('full'),
+                    Toggle::make('active')->label('Theo dõi'),
+                ])->columns(2),
             ]);
     }
 
@@ -65,9 +61,10 @@ class UtilityTypeResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('Loại tiện ích')->sortable()->searchable(),
-                TextColumn::make('description')->label('Mô tả')->sortable(),
-                TextColumn::make('sort')->label('Sắp xếp')->sortable(),
+                TextColumn::make('name')->label('Tên nhân viên')->sortable()->searchable(),
+                TextColumn::make('email')->label('Email')->sortable(),
+                IconColumn::make('email_verified_at')->boolean()->label('Xác thực'),
+                IconColumn::make('active')->boolean()->label('Hoạt động'),
             ])
             ->filters([
                 //
@@ -93,10 +90,10 @@ class UtilityTypeResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUtilityTypes::route('/'),
-            'create' => Pages\CreateUtilityType::route('/create'),
-            'view' => Pages\ViewUtilityType::route('/{record}'),
-            'edit' => Pages\EditUtilityType::route('/{record}/edit'),
+            'index' => Pages\ListUsers::route('/'),
+            'create' => Pages\CreateUser::route('/create'),
+            'view' => Pages\ViewUser::route('/{record}'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 }

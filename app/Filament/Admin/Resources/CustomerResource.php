@@ -24,13 +24,12 @@ class CustomerResource extends Resource
 {
     protected static ?string $model = Customer::class;
 
-    protected static ?string $recordTitleAttribute = 'name';
-
     protected static ?string $slug = 'customers';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
     protected static ?int $navigationSort = 3;
+
+    protected static ?string $recordTitleAttribute = 'name';
 
 
     public static function shouldRegisterNavigation(): bool
@@ -91,6 +90,7 @@ class CustomerResource extends Resource
                     ->searchable(),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

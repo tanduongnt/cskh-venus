@@ -1,5 +1,6 @@
 <x-filament-panels::page>
-        @for ($i = 0; $i < (1440/$block); $i++)
-        {{ $i }}
-        @endfor
+    <form wire:submit="create">
+        {{ $this->form }}
+    </form>
+
 </x-filament-panels::page>
