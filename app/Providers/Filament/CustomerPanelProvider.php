@@ -6,14 +6,15 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use Filament\Facades\Filament;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
-use App\Filament\Customer\Pages\Utility;
 use App\Filament\Customer\Pages\Dashboard;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Navigation\NavigationBuilder;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use App\Filament\Customer\Pages\UtilityRegistration;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -33,7 +34,9 @@ class CustomerPanelProvider extends PanelProvider
             ->authGuard('customer')
             ->colors([
                 'primary' => Color::Amber,
+                'success' => Color::Blue,
             ])
+            ->viteTheme('resources/css/app.css')
             ->discoverResources(in: app_path('Filament/Customer/Resources'), for: 'App\\Filament\\Customer\\Resources')
             ->discoverPages(in: app_path('Filament/Customer/Pages'), for: 'App\\Filament\\Customer\\Pages')
             ->discoverWidgets(in: app_path('Filament/Customer/Widgets'), for: 'App\\Filament\\Customer\\Widgets')
@@ -42,7 +45,7 @@ class CustomerPanelProvider extends PanelProvider
             ])
             ->navigationItems([
                 NavigationItem::make('Utility')
-                    ->url(fn (): string => Utility::getUrl())
+                    ->url(fn (): string => UtilityRegistration::getUrl())
                     ->icon('heroicon-o-presentation-chart-line')
                     ->sort(3)
                     ->label('Đăng ký tiện ích'),
