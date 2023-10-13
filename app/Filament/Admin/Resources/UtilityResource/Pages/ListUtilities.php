@@ -20,7 +20,7 @@ class ListUtilities extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->label('thêm mới'),
+            Actions\CreateAction::make()->label('Thêm mới'),
         ];
     }
 }

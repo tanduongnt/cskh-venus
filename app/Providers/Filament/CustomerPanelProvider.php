@@ -34,7 +34,6 @@ class CustomerPanelProvider extends PanelProvider
             ->authGuard('customer')
             ->colors([
                 'primary' => Color::Amber,
-                'success' => Color::Blue,
             ])
             ->viteTheme('resources/css/app.css')
             ->discoverResources(in: app_path('Filament/Customer/Resources'), for: 'App\\Filament\\Customer\\Resources')

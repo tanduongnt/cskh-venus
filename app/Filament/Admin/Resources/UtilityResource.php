@@ -67,28 +67,55 @@ class UtilityResource extends NestedResource
                     TextInput::make('name')
                         ->required()
                         ->label('Tên tiện ích')
-                        ->columnSpan('full'),
-                    TimePicker::make('start_time')
-                        ->required()
-                        ->native(false)
-                        ->displayFormat('H:i:s'),
-                    TimePicker::make('end_time')
-                        ->required()
-                        ->native(false)
-                        ->displayFormat('H:i:s'),
-                    TextInput::make('block')
-                        ->numeric()
-                        ->label('Block (phút)'),
+                        ->columnSpan(2),
                     TextInput::make('sort')
                         ->nullable()
                         ->numeric()
                         ->label('Sắp xếp'),
+                    Toggle::make('registrable')
+                        ->default(true)
+                        ->label('Đăng ký để sử dụng')
+                        ->columnSpan('full'),
+                    TimePicker::make('start_time')
+                        ->default('00:00:00')
+                        ->required()
+                        ->native(false)
+                        ->displayFormat('H:i:s')
+                        ->label('Thời gian bắt đầu'),
+                    TimePicker::make('end_time')
+                        ->after('start_time')
+                        ->default('23:59:59')
+                        ->required()
+                        ->native(false)
+                        ->displayFormat('H:i:s')
+                        ->label('Thời gian kết thúc'),
+                    TextInput::make('block')
+                        ->numeric()
+                        ->label('Block (phút)'),
+                    Toggle::make('charge_by_block')
+                        ->default(true)
+                        ->label('Tính tiền theo block')
+                        ->columnSpan('full'),
+                    TimePicker::make('charge_start_time')
+                        ->native(false)
+                        ->displayFormat('H:i:s')
+                        ->label('Thời gian bắt đầu tính tiền'),
+                    TimePicker::make('charge_end_time')
+                        ->after('start_time')
+                        ->native(false)
+                        ->displayFormat('H:i:s')
+                        ->label('Thời gian kết thúc tính tiền'),
+                    TextInput::make('price')
+                        ->numeric()
+                        ->label('Giá tiền (VNĐ)'),
                     RichEditor::make('description')
                         ->nullable()
                         ->label('Mô tả')
                         ->columnSpan('full'),
-                    Toggle::make('active')->label('Theo dõi'),
-                ])->columns(2),
+                    Toggle::make('active')
+                        ->default(true)
+                        ->label('Theo dõi'),
+                ])->columns(3),
             ]);
     }
 
