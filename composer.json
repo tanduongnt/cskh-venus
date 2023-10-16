@@ -19,7 +19,6 @@
         "laravel/passport": "^11.9",
         "laravel/sanctum": "^3.2",
         "laravel/tinker": "^2.8",
-        "spatie/laravel-livewire-wizard": "^2.0",
         "staudenmeir/eloquent-has-many-deep": "^1.8"
     },
     "require-dev": {

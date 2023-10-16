@@ -40,4 +40,9 @@ class Utility extends Model
     {
         return $this->belongsTo(UtilityType::class);
     }
+
+    public function registrationForms(): HasMany
+    {
+        return $this->hasMany(RegistrationForm::class);
+    }
 }

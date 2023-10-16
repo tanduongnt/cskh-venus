@@ -19,11 +19,11 @@ return new class extends Migration
             $table->time('start_time');
             $table->time('end_time');
             $table->boolean('registerable')->default(true);
-            $table->integer('block');
+            $table->integer('block')->nullable();
             $table->double('price')->default(0);
             $table->boolean('charge_by_block')->default(true);
-            $table->time('charge_start_time');
-            $table->time('charge_end_time');
+            $table->time('charge_start_time')->nullable();
+            $table->time('charge_end_time')->nullable();
             $table->longText('description')->nullable();
             $table->integer('sort')->nullable();
             $table->boolean('active')->default(true);

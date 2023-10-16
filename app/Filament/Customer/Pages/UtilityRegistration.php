@@ -12,11 +12,13 @@ use Filament\Pages\Page;
 use App\Models\Apartment;
 use App\Models\UtilityType;
 use Illuminate\Support\Str;
+use App\Models\RegistrationForm;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\View;
 use Illuminate\Support\Facades\Auth;
+use PhpParser\Node\Expr\Cast\Double;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Wizard;
 use Illuminate\Support\Facades\Blade;
@@ -51,6 +53,11 @@ class UtilityRegistration extends Page
     public ?string $apartment_id;
     public ?string $utility_type_id;
     public ?string $utility_id;
+    public ?string $date;
+    public ?string $start_time;
+    public ?string $end_time;
+    public ?string $price;
+    public ?Double $total_amount;
 
     public ?Collection $buildings;
     public ?Collection $apartments;
@@ -61,6 +68,8 @@ class UtilityRegistration extends Page
     {
         $this->blocks = collect();
         $this->customer_id = Auth::id();
+        $this->date = now()->toDateString();
+        //dd($this->date);
 
         $this->buildings = Building::withWhereHas('apartments', function ($query) {
             $query->whereHas('customers', function ($query) {
@@ -76,6 +85,7 @@ class UtilityRegistration extends Page
             'customer_id' => $this->customer_id,
             'building_id' => $this->buildings[0]->id,
             'apartment_id' => $this->buildings[0]->apartments[0]->id,
+            'date'         => $this->date,
         ]);
     }
 
@@ -145,7 +155,7 @@ class UtilityRegistration extends Page
                                             $query->where('customer_id', Auth::id());
                                         });
                                     });
-                                })->where('block', '>', 0)->where('utility_type_id', $get('utility_type_id'))->pluck('name', 'id'))
+                                })->where('registrable', true)->where('block', '>', 0)->where('utility_type_id', $get('utility_type_id'))->pluck('name', 'id'))
                                 // ->getSearchResultsUsing(function (string $search, Get $get) {
                                 //     return Utility::whereHas('building', function ($query) use ($get) {
                                 //         $query->where('building_id', $get('building_id'));
@@ -197,26 +207,46 @@ class UtilityRegistration extends Page
         $this->utility = Utility::find($utility_id);
         $this->blocks = collect();
         if ($this->utility->block) {
+            $block_price = $this->utility->price;
             $blockCount = floor(1440 / $this->utility->block);
             $start_time = Carbon::parse($this->utility->start_time);
             $end_time = Carbon::parse($this->utility->end_time);
+            $charge_start_time = Carbon::parse($this->utility->charge_start_time);
+            $charge_end_time = Carbon::parse($this->utility->charge_end_time);
             for ($i = 0; $i < $blockCount; $i++) {
                 $minutes =  $i * $this->utility->block;
                 $block_start = Carbon::today()->addMinutes($minutes);
                 $block_end = Carbon::today()->addMinutes($minutes + $this->utility->block);
                 $enable =  $start_time->lte($block_start) && $end_time->gte($block_end);
+                $charge_enable = $this->utility->charge_by_block = true && $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
+                $this->price = $enable && $charge_enable ? $block_price : 0;
                 $this->blocks->push([
                     'enable' => $enable,
                     'start' => $block_start,
                     'end' => $block_end,
+                    'price' => $this->price,
                 ]);
             }
         }
     }
 
+    public function selectBlock($block_start, $block_end)
+    {
+        $this->start_time = $block_start;
+        $this->end_time = $block_end;
+        //dd($this->start_time, $this->end_time);
+    }
 
     public function create(): void
     {
-        dd($this->form->getState());
+        dd($this->form->getState(), $this->start_time, $this->end_time);
+        $registrationForm = new RegistrationForm();
+        $registrationForm->utility_id = $this->utility_id;
+        $registrationForm->customer_id = $this->customer_id;
+        $registrationForm->date = $this->date;
+        $registrationForm->start_time = $this->start_time;
+        $registrationForm->end_time = $this->end_time;
+        $registrationForm->total_amount = $this->price;
+        $registrationForm->save();
     }
 }
