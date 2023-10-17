@@ -97,11 +97,13 @@ class UtilityResource extends NestedResource
                         ->label('Tính tiền theo block')
                         ->columnSpan('full'),
                     TimePicker::make('charge_start_time')
+                        ->afterOrEqual('start_time')
                         ->native(false)
                         ->displayFormat('H:i:s')
                         ->label('Thời gian bắt đầu tính tiền'),
                     TimePicker::make('charge_end_time')
-                        ->after('start_time')
+                        ->beforeOrEqual('end_time')
+                        ->after('charge_start_time')
                         ->native(false)
                         ->displayFormat('H:i:s')
                         ->label('Thời gian kết thúc tính tiền'),

@@ -43,6 +43,6 @@ class Utility extends Model
 
     public function registrationForms(): HasMany
     {
-        return $this->hasMany(RegistrationForm::class);
+        return $this->hasMany(UtilityRegistration::class);
     }
 }

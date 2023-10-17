@@ -36,7 +36,7 @@ class UtilityRegistration extends Page
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string $view = 'filament.customer.pages.utility';
+    protected static string $view = 'filament.customer.pages.utility-registration';
 
     protected static ?string $title = 'Đăng ký tiện ích';
 
@@ -54,21 +54,18 @@ class UtilityRegistration extends Page
     public ?string $utility_type_id;
     public ?string $utility_id;
     public ?string $date;
-    public ?string $start_time;
-    public ?string $end_time;
-    public ?string $price;
-    public ?Double $total_amount;
 
     public ?Collection $buildings;
     public ?Collection $apartments;
     public ?Utility $utility;
     public ?Collection $blocks;
+    public ?Collection $selectedBlocks;
 
     public function mount()
     {
         $this->blocks = collect();
         $this->customer_id = Auth::id();
-        $this->date = now()->toDateString();
+        $this->date = now()->format('d/m/Y');
         //dd($this->date);
 
         $this->buildings = Building::withWhereHas('apartments', function ($query) {
@@ -84,7 +81,7 @@ class UtilityRegistration extends Page
         $this->form->fill([
             'customer_id' => $this->customer_id,
             'building_id' => $this->buildings[0]->id,
-            'apartment_id' => $this->buildings[0]->apartments[0]->id,
+            'apartment_id' => $this->buildings[0]?->apartments[0]?->id,
             'date'         => $this->date,
         ]);
     }
@@ -190,7 +187,7 @@ class UtilityRegistration extends Page
                     ->schema([
                         TextInput::make('customer_id'),
                         TextInput::make('utility_id'),
-                        DatePicker::make('date'),
+                        DatePicker::make('date')->format('d/m/Y'),
                     ])
             ]);
     }
@@ -218,35 +215,47 @@ class UtilityRegistration extends Page
                 $block_start = Carbon::today()->addMinutes($minutes);
                 $block_end = Carbon::today()->addMinutes($minutes + $this->utility->block);
                 $enable =  $start_time->lte($block_start) && $end_time->gte($block_end);
-                $charge_enable = $this->utility->charge_by_block = true && $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
-                $this->price = $enable && $charge_enable ? $block_price : 0;
+                $charge_enable = $this->utility->charge_by_block && $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
+                $price = ($enable && $charge_enable) ? $block_price : 0;
                 $this->blocks->push([
                     'enable' => $enable,
                     'start' => $block_start,
                     'end' => $block_end,
-                    'price' => $this->price,
+                    'price' => $price,
+                    'selected' => false,
                 ]);
             }
         }
+        //dd($this->blocks);
     }
 
-    public function selectBlock($block_start, $block_end)
+    public function selectBlock($index)
     {
-        $this->start_time = $block_start;
-        $this->end_time = $block_end;
-        //dd($this->start_time, $this->end_time);
+        $block = $this->blocks[$index];
+        $block['selected'] = !$block['selected'];
+        $this->blocks->put($index, $block);
     }
 
-    public function create(): void
+    public function store(): void
     {
-        dd($this->form->getState(), $this->start_time, $this->end_time);
-        $registrationForm = new RegistrationForm();
-        $registrationForm->utility_id = $this->utility_id;
-        $registrationForm->customer_id = $this->customer_id;
-        $registrationForm->date = $this->date;
-        $registrationForm->start_time = $this->start_time;
-        $registrationForm->end_time = $this->end_time;
-        $registrationForm->total_amount = $this->price;
-        $registrationForm->save();
+        $selectedBlocks = collect();
+        $selected = $this->blocks->filter(function ($value, $key) {
+            return $value['selected'];
+        });
+        //$keys = $selectedBlocks->keys();
+        //dd($selectedBlocks);
+        $previousKey = 0;
+        foreach ($selected as $key => $block) {
+            if ($key - $previousKey == 1 && $selectedBlocks->count() > 0) {
+                $previousBlock = $selectedBlocks[$selectedBlocks->count() - 1];
+                $previousBlock['end'] = $block['end'];
+                $priceBlock['price'] = $block['price'];
+                $selectedBlocks->put($selectedBlocks->count() - 1, $previousBlock);
+            } else {
+                $selectedBlocks->push($block);
+            }
+            $previousKey = $key;
+        }
+        dd($selectedBlocks);
     }
 }

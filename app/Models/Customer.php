@@ -57,6 +57,6 @@ class Customer extends Authenticatable
 
     public function registrationForms(): HasMany
     {
-        return $this->hasMany(RegistrationForm::class);
+        return $this->hasMany(UtilityRegistration::class);
     }
 }

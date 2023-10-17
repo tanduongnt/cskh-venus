@@ -48,6 +48,11 @@ class CustomerPanelProvider extends PanelProvider
                     ->icon('heroicon-o-presentation-chart-line')
                     ->sort(3)
                     ->label('Đăng ký tiện ích'),
+                NavigationItem::make('ViewUtilityRe')
+                    ->url(fn (): string => UtilityRegistration::getUrl())
+                    ->icon('heroicon-o-presentation-chart-line')
+                    ->sort(3)
+                    ->label('Đăng ký tiện ích'),
             ])
             ->widgets([
                 Widgets\AccountWidget::class,
