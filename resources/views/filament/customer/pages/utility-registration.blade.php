@@ -5,26 +5,28 @@
         </div>
         <div class="shadow-md bg-white rounded-lg p-6 m-2">
             <div class="grid grid-cols-4 lg:grid-cols-6 gap-4">
-                @foreach ($blocks as $index => $block)
-                    @if ($block['enable'])
-                        <div @class([
-                            'text-center text-sm text-white rounded-lg p-3 cursor-pointer',
-                            'bg-green-700' => $block['enable'] && !$block['selected'],
-                            'bg-sky-700' => $block['enable'] && $block['selected'],
-                        ]) wire:click="selectBlock('{{ $index }}')">
-                            {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
-                        </div>
-                    @else
-                        <div class="text-center text-sm text-white rounded-lg p-3 bg-gray-500">
-                            {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
-                        </div>
-                    @endif
-                @endforeach
+                @if ($utility_id)
+                    @foreach ($blocks as $index => $block)
+                        @if ($block['enable'])
+                            <div @class([
+                                'text-center text-sm text-white rounded-lg p-3 cursor-pointer',
+                                'bg-green-700' => $block['enable'] && !$block['selected'],
+                                'bg-sky-700' => $block['enable'] && $block['selected'],
+                            ]) wire:click="selectBlock('{{ $index }}')">
+                                {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
+                            </div>
+                        @else
+                            <div class="text-center text-sm text-white rounded-lg p-3 bg-gray-500">
+                                {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
+                            </div>
+                        @endif
+                    @endforeach
+                @endif
             </div>
         </div>
         <div>
             <x-filament::button class="m-2" type="submit">
-                Submit
+                Hoàn tất
             </x-filament::button>
         </div>
     </form>

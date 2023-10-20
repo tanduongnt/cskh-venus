@@ -62,11 +62,12 @@ class CustomersRelationManager extends RelationManager
                     ->label('Thêm mới')
                     ->modalHeading('Thêm mới thành viên')
                     ->modalSubmitActionLabel('Thêm mới')
+                    ->successNotificationTitle('Thêm mới dữ liệu thành công')
                     ->attachAnother(false),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DetachAction::make()->label('Xóa')->modalHeading('Dữ liệu đã xóa không thể khôi phục'),
+                Tables\Actions\DetachAction::make()->label('Xóa')->modalHeading('Dữ liệu đã xóa không thể khôi phục')->successNotificationTitle('Xóa dữ liệu thành công'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

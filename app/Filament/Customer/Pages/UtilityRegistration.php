@@ -57,6 +57,8 @@ class UtilityRegistration extends Page
 
     public ?Collection $buildings;
     public ?Collection $apartments;
+    public ?Collection $utilities;
+    public ?Collection $utility_type;
     public ?Utility $utility;
     public ?Collection $blocks;
     public ?Collection $selectedBlocks;
@@ -74,14 +76,29 @@ class UtilityRegistration extends Page
             });
         })->get();
 
-        if ($this->buildings->count() == 1 && $this->buildings[0]->apartments->count() == 1) {
-            $this->step = 2;
+        if ($this->buildings->count() > 0) {
+            $building_id = $this->buildings[0]->id;
+            $this->apartments = $this->buildings[0]->apartments;
+            $this->utility_type = UtilityType::whereHas('utilities', function ($query) use ($building_id) {
+                $query->whereHas('building', function ($query) use ($building_id) {
+                    $query->where('id', $building_id);
+                    $query->whereHas('apartments', function ($query) {
+                        $query->whereHas('customers', function ($query) {
+                            $query->where('customer_id', Auth::id());
+                        });
+                    });
+                });
+            })->get();
+            $this->utilities = $this->utility_type[0]->utilities;
+            if ($this->buildings->count() == 1 && $this->apartments->count() == 1) {
+                $this->step = 2;
+            }
         }
 
         $this->form->fill([
             'customer_id' => $this->customer_id,
             'building_id' => $this->buildings[0]->id,
-            'apartment_id' => $this->buildings[0]?->apartments[0]?->id,
+            'apartment_id' => $this->buildings[0]->apartments[0]?->id,
             'date'         => $this->date,
         ]);
     }
@@ -95,6 +112,36 @@ class UtilityRegistration extends Page
                         ->schema([
                             Select::make('building_id')
                                 ->options($this->buildings->pluck('name', 'id'))
+                                ->live()
+                                ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
+                                    $this->apartments = collect();
+                                    $this->utility_type = collect();
+                                    if ($get('building_id')) {
+                                        $this->apartments = Apartment::whereHas('customers', function ($query) {
+                                            $query->where('customer_id', Auth::id());
+                                        })->where('building_id', $get('building_id'))->get();
+
+                                        $this->utility_type = UtilityType::whereHas('utilities', function ($query) use ($get) {
+                                            $query->whereHas('building', function ($query) use ($get) {
+                                                $query->where('id', $get('building_id'));
+                                                $query->whereHas('apartments', function ($query) {
+                                                    $query->whereHas('customers', function ($query) {
+                                                        $query->where('customer_id', Auth::id());
+                                                    });
+                                                });
+                                            });
+                                        })->get();
+
+                                        if ($this->apartments->count() > 0) {
+                                            $set('apartment_id', $this->apartments[0]->id);
+                                        }
+                                        if ($this->utility_type->count() > 0) {
+                                            $set('utility_type_id', null);
+                                            $set('utility_id', null);
+                                        }
+                                        //dd($this->utility_type);
+                                    }
+                                })
                                 ->searchable()
                                 ->required()
                                 ->searchPrompt('Tìm theo tên chung cư')
@@ -102,9 +149,11 @@ class UtilityRegistration extends Page
                                 ->columnSpan(1),
 
                             Select::make('apartment_id')
-                                ->options(fn (Get $get): Collection => Apartment::whereHas('customers', function ($query) {
-                                    $query->where('customer_id', Auth::id());
-                                })->where('building_id', $get('building_id'))->pluck('name', 'id'))
+                                //->options($this->apartments->pluck('name', 'id'))
+                                ->options(fn (Get $get): Collection => $this->apartments->where('building_id', $get('building_id'))->pluck('name', 'id'))
+                                ->live()
+                                ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
+                                })
                                 ->searchable()
                                 ->required()
                                 ->searchPrompt('Tìm theo tên hoặc mã căn hộ')
@@ -115,29 +164,26 @@ class UtilityRegistration extends Page
                     Wizard\Step::make('UtilityType')
                         ->schema([
                             Select::make('utility_type_id')
-                                ->options(fn (Get $get): Collection => UtilityType::whereHas('utilities', function ($query) use ($get) {
-                                    $query->whereHas('building', function ($query) use ($get) {
-                                        $query->where('building_id', $get('building_id'));
-                                        $query->whereHas('apartments', function ($query) {
-                                            $query->whereHas('customers', function ($query) {
-                                                $query->where('customer_id', Auth::id());
+                                ->options(fn (Get $get): Collection => $this->utility_type->pluck('name', 'id'))
+                                ->live()
+                                ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
+                                    $this->utilities = collect();
+                                    if ($get('utility_type_id')) {
+                                        $this->utilities = Utility::withWhereHas('building', function ($query) use ($get) {
+                                            $query->where('id', $get('building_id'));
+                                            $query->whereHas('apartments', function ($query) {
+                                                $query->whereHas('customers', function ($query) {
+                                                    $query->where('customer_id', Auth::id());
+                                                });
                                             });
-                                        });
-                                    });
-                                })->pluck('name', 'id'))
-                                // ->getSearchResultsUsing(function (string $search, Get $get) {
-                                //     return UtilityType::whereHas('utilities', function ($query) use ($get) {
-                                //         $query->whereHas('building', function ($query) use ($get) {
-                                //             $query->where('building_id', $get('building_id'));
-                                //             $query->whereHas('apartments', function ($query) {
-                                //                 $query->whereHas('customers', function ($query) {
-                                //                     $query->where('customer_id', Auth::id());
-                                //                 });
-                                //             });
-                                //         });
-                                //     })->where('name', 'LIKE', "%{$search}%")->pluck('name', 'id');
-                                // })
-                                //->getOptionLabelUsing(fn ($value): ?string => UtilityType::find($value)?->name)
+                                        })->where('registrable', true)->where('utility_type_id', $get('utility_type_id'))->get();
+                                    }
+
+                                    if ($this->utilities->count() > 0) {
+                                        $set('utility_id', null);
+                                    }
+                                    //dd($get('building_id'), $get('utility_type_id'));
+                                })
                                 ->searchable()
                                 ->required()
                                 ->searchPrompt('Tìm theo loại tiện ích')
@@ -145,32 +191,14 @@ class UtilityRegistration extends Page
                                 ->columnSpan(1),
 
                             Select::make('utility_id')
-                                ->options(fn (Get $get): Collection => Utility::whereHas('building', function ($query) use ($get) {
-                                    $query->where('building_id', $get('building_id'));
-                                    $query->whereHas('apartments', function ($query) {
-                                        $query->whereHas('customers', function ($query) {
-                                            $query->where('customer_id', Auth::id());
-                                        });
-                                    });
-                                })->where('registrable', true)->where('block', '>', 0)->where('utility_type_id', $get('utility_type_id'))->pluck('name', 'id'))
-                                // ->getSearchResultsUsing(function (string $search, Get $get) {
-                                //     return Utility::whereHas('building', function ($query) use ($get) {
-                                //         $query->where('building_id', $get('building_id'));
-                                //         $query->whereHas('apartments', function ($query) {
-                                //             $query->whereHas('customers', function ($query) {
-                                //                 $query->where('customer_id', Auth::id());
-                                //             });
-                                //         });
-                                //     })->where('block', '>', 0)->where('utility_type_id', $get('utility_type_id'))->where('name', 'LIKE', "%{$search}%")->pluck('name', 'id');
-                                // })
-                                // ->getOptionLabelUsing(fn ($value): ?string => Utility::find($value)?->name)
+                                ->options(fn (Get $get): Collection => $this->utilities->where('building_id', $get('building_id'))->where('utility_type_id', $get('utility_type_id'))->pluck('name', 'id'))
                                 ->searchable()
                                 ->required()
                                 ->searchPrompt('Tìm theo tên tiện ích')
                                 ->label('Tiện ích')
                                 ->live()
                                 ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
-                                    if (($get('utility_id') ?? '')) {
+                                    if ($get('utility_id')) {
                                         return;
                                     }
                                 })
@@ -186,6 +214,7 @@ class UtilityRegistration extends Page
                 Grid::make()
                     ->schema([
                         TextInput::make('customer_id'),
+                        TextInput::make('utility_type_id'),
                         TextInput::make('utility_id'),
                         DatePicker::make('date')->format('d/m/Y'),
                     ])
@@ -199,8 +228,10 @@ class UtilityRegistration extends Page
         }
     }
 
+
     public function generateUtilityBlocks($utility_id)
     {
+        //dd($utility_id);
         $this->utility = Utility::find($utility_id);
         $this->blocks = collect();
         if ($this->utility->block) {
@@ -221,6 +252,7 @@ class UtilityRegistration extends Page
                     'enable' => $enable,
                     'start' => $block_start,
                     'end' => $block_end,
+                    'charge_enable' => $charge_enable,
                     'price' => $price,
                     'selected' => false,
                 ]);
@@ -249,13 +281,13 @@ class UtilityRegistration extends Page
             if ($key - $previousKey == 1 && $selectedBlocks->count() > 0) {
                 $previousBlock = $selectedBlocks[$selectedBlocks->count() - 1];
                 $previousBlock['end'] = $block['end'];
-                $priceBlock['price'] = $block['price'];
+                $previousBlock['price'] += $block['charge_enable'] ? $block['price'] : 0;
                 $selectedBlocks->put($selectedBlocks->count() - 1, $previousBlock);
             } else {
                 $selectedBlocks->push($block);
             }
             $previousKey = $key;
         }
-        dd($selectedBlocks);
+        dd($selectedBlocks, $selected, $previousBlock);
     }
 }

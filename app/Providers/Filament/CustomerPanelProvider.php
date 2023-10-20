@@ -52,7 +52,7 @@ class CustomerPanelProvider extends PanelProvider
                     ->url(fn (): string => UtilityRegistration::getUrl())
                     ->icon('heroicon-o-presentation-chart-line')
                     ->sort(3)
-                    ->label('Đăng ký tiện ích'),
+                    ->label('Chi tiết đăng ký'),
             ])
             ->widgets([
                 Widgets\AccountWidget::class,
