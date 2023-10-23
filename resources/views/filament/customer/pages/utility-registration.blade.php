@@ -3,6 +3,9 @@
         <div>
             {{ $this->form }}
         </div>
+        <div class="shadow-md bg-white rounded-lg p-3 m-2 text-center text-sm cursor-pointer">
+            Tổng tiền : {{$totalPriceBlocks}} VNĐ
+        </div>
         <div class="shadow-md bg-white rounded-lg p-6 m-2">
             <div class="grid grid-cols-4 lg:grid-cols-6 gap-4">
                 @if ($utility_id)

@@ -15,6 +15,7 @@ use Filament\Navigation\NavigationBuilder;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Customer\Pages\UtilityRegistration;
+use App\Filament\Customer\Pages\UtilityRegistrationPage;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -44,12 +45,12 @@ class CustomerPanelProvider extends PanelProvider
             ])
             ->navigationItems([
                 NavigationItem::make('Utility')
-                    ->url(fn (): string => UtilityRegistration::getUrl())
+                    ->url(fn (): string => UtilityRegistrationPage::getUrl())
                     ->icon('heroicon-o-presentation-chart-line')
                     ->sort(3)
                     ->label('Đăng ký tiện ích'),
                 NavigationItem::make('ViewUtilityRe')
-                    ->url(fn (): string => UtilityRegistration::getUrl())
+                    //->url(fn (): string => UtilityRegistration::getUrl())
                     ->icon('heroicon-o-presentation-chart-line')
                     ->sort(3)
                     ->label('Chi tiết đăng ký'),

@@ -13,6 +13,7 @@ use App\Models\Apartment;
 use App\Models\UtilityType;
 use Illuminate\Support\Str;
 use App\Models\RegistrationForm;
+use App\Models\UtilityRegistration;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Grid;
@@ -30,7 +31,7 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Concerns\InteractsWithForms;
 
-class UtilityRegistration extends Page
+class UtilityRegistrationPage extends Page
 {
     use InteractsWithForms;
 
@@ -54,21 +55,25 @@ class UtilityRegistration extends Page
     public ?string $utility_type_id;
     public ?string $utility_id;
     public ?string $date;
+    public ?string $registrationDate;
+    public ?string $totalPriceBlocks;
 
     public ?Collection $buildings;
     public ?Collection $apartments;
     public ?Collection $utilities;
-    public ?Collection $utility_type;
+    public ?Collection $utility_types;
     public ?Utility $utility;
     public ?Collection $blocks;
     public ?Collection $selectedBlocks;
+    public ?Collection $registrationBlocks;
 
     public function mount()
     {
         $this->blocks = collect();
         $this->customer_id = Auth::id();
-        $this->date = now()->format('d/m/Y');
-        //dd($this->date);
+        $this->date = now()->toDateString();
+        $this->registrationDate = now()->toDateString();
+        $this->totalPriceBlocks = 0;
 
         $this->buildings = Building::withWhereHas('apartments', function ($query) {
             $query->whereHas('customers', function ($query) {
@@ -79,7 +84,7 @@ class UtilityRegistration extends Page
         if ($this->buildings->count() > 0) {
             $building_id = $this->buildings[0]->id;
             $this->apartments = $this->buildings[0]->apartments;
-            $this->utility_type = UtilityType::whereHas('utilities', function ($query) use ($building_id) {
+            $this->utility_types = UtilityType::whereHas('utilities', function ($query) use ($building_id) {
                 $query->whereHas('building', function ($query) use ($building_id) {
                     $query->where('id', $building_id);
                     $query->whereHas('apartments', function ($query) {
@@ -89,7 +94,7 @@ class UtilityRegistration extends Page
                     });
                 });
             })->get();
-            $this->utilities = $this->utility_type[0]->utilities;
+            $this->utilities = $this->utility_types[0]->utilities;
             if ($this->buildings->count() == 1 && $this->apartments->count() == 1) {
                 $this->step = 2;
             }
@@ -100,6 +105,7 @@ class UtilityRegistration extends Page
             'building_id' => $this->buildings[0]->id,
             'apartment_id' => $this->buildings[0]->apartments[0]?->id,
             'date'         => $this->date,
+            'registration_date' => $this->registrationDate,
         ]);
     }
 
@@ -115,13 +121,13 @@ class UtilityRegistration extends Page
                                 ->live()
                                 ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
                                     $this->apartments = collect();
-                                    $this->utility_type = collect();
+                                    $this->utility_types = collect();
                                     if ($get('building_id')) {
                                         $this->apartments = Apartment::whereHas('customers', function ($query) {
                                             $query->where('customer_id', Auth::id());
                                         })->where('building_id', $get('building_id'))->get();
 
-                                        $this->utility_type = UtilityType::whereHas('utilities', function ($query) use ($get) {
+                                        $this->utility_types = UtilityType::whereHas('utilities', function ($query) use ($get) {
                                             $query->whereHas('building', function ($query) use ($get) {
                                                 $query->where('id', $get('building_id'));
                                                 $query->whereHas('apartments', function ($query) {
@@ -135,11 +141,10 @@ class UtilityRegistration extends Page
                                         if ($this->apartments->count() > 0) {
                                             $set('apartment_id', $this->apartments[0]->id);
                                         }
-                                        if ($this->utility_type->count() > 0) {
+                                        if ($this->utility_types->count() > 0) {
                                             $set('utility_type_id', null);
                                             $set('utility_id', null);
                                         }
-                                        //dd($this->utility_type);
                                     }
                                 })
                                 ->searchable()
@@ -149,7 +154,6 @@ class UtilityRegistration extends Page
                                 ->columnSpan(1),
 
                             Select::make('apartment_id')
-                                //->options($this->apartments->pluck('name', 'id'))
                                 ->options(fn (Get $get): Collection => $this->apartments->where('building_id', $get('building_id'))->pluck('name', 'id'))
                                 ->live()
                                 ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
@@ -164,7 +168,7 @@ class UtilityRegistration extends Page
                     Wizard\Step::make('UtilityType')
                         ->schema([
                             Select::make('utility_type_id')
-                                ->options(fn (Get $get): Collection => $this->utility_type->pluck('name', 'id'))
+                                ->options(fn (Get $get): Collection => $this->utility_types->pluck('name', 'id'))
                                 ->live()
                                 ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
                                     $this->utilities = collect();
@@ -176,13 +180,12 @@ class UtilityRegistration extends Page
                                                     $query->where('customer_id', Auth::id());
                                                 });
                                             });
-                                        })->where('registrable', true)->where('utility_type_id', $get('utility_type_id'))->get();
+                                        })->where('registrable', true)->where('active', true)->where('utility_type_id', $get('utility_type_id'))->get();
                                     }
 
                                     if ($this->utilities->count() > 0) {
                                         $set('utility_id', null);
                                     }
-                                    //dd($get('building_id'), $get('utility_type_id'));
                                 })
                                 ->searchable()
                                 ->required()
@@ -216,7 +219,15 @@ class UtilityRegistration extends Page
                         TextInput::make('customer_id'),
                         TextInput::make('utility_type_id'),
                         TextInput::make('utility_id'),
-                        DatePicker::make('date')->format('d/m/Y'),
+                        DatePicker::make('date')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->label('Ngày sử dụng'),
+                        DatePicker::make('registration_date')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->label('Ngày đăng ký')
+                            ->hidden('customer_id'),
                     ])
             ]);
     }
@@ -224,14 +235,13 @@ class UtilityRegistration extends Page
     public function updatedUtilityId()
     {
         if ($this->utility_id) {
-            $this->generateUtilityBlocks($this->utility_id);
+            $this->generateUtilityBlocks($this->utility_id, $this->apartment_id);
         }
     }
 
 
-    public function generateUtilityBlocks($utility_id)
+    public function generateUtilityBlocks($utility_id, $apartment_id)
     {
-        //dd($utility_id);
         $this->utility = Utility::find($utility_id);
         $this->blocks = collect();
         if ($this->utility->block) {
@@ -246,48 +256,60 @@ class UtilityRegistration extends Page
                 $block_start = Carbon::today()->addMinutes($minutes);
                 $block_end = Carbon::today()->addMinutes($minutes + $this->utility->block);
                 $enable =  $start_time->lte($block_start) && $end_time->gte($block_end);
-                $charge_enable = $this->utility->charge_by_block && $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
-                $price = ($enable && $charge_enable) ? $block_price : 0;
+                $chargeable = $this->utility->charge_by_block && $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
+                $price = ($enable && $chargeable) ? $block_price : 0;
                 $this->blocks->push([
-                    'enable' => $enable,
-                    'start' => $block_start,
-                    'end' => $block_end,
-                    'charge_enable' => $charge_enable,
-                    'price' => $price,
-                    'selected' => false,
+                    'enable'        => $enable,
+                    'start'         => $block_start,
+                    'end'           => $block_end,
+                    'chargeable'    => $chargeable,
+                    'price'         => $price,
+                    'selected'      => false,
                 ]);
             }
         }
-        //dd($this->blocks);
     }
 
     public function selectBlock($index)
     {
         $block = $this->blocks[$index];
         $block['selected'] = !$block['selected'];
+        $this->totalPriceBlocks += $block['chargeable'] ? $block['price'] : 0;
         $this->blocks->put($index, $block);
     }
 
     public function store(): void
     {
-        $selectedBlocks = collect();
-        $selected = $this->blocks->filter(function ($value, $key) {
-            return $value['selected'];
-        });
-        //$keys = $selectedBlocks->keys();
-        //dd($selectedBlocks);
-        $previousKey = 0;
-        foreach ($selected as $key => $block) {
-            if ($key - $previousKey == 1 && $selectedBlocks->count() > 0) {
-                $previousBlock = $selectedBlocks[$selectedBlocks->count() - 1];
-                $previousBlock['end'] = $block['end'];
-                $previousBlock['price'] += $block['charge_enable'] ? $block['price'] : 0;
-                $selectedBlocks->put($selectedBlocks->count() - 1, $previousBlock);
-            } else {
-                $selectedBlocks->push($block);
+        if ($this->utility->block) {
+            $selectedBlocks = collect();
+            $selected = $this->blocks->filter(function ($value, $key) {
+                return $value['selected'];
+            });
+            $previousKey = 0;
+            foreach ($selected as $key => $block) {
+                if ($key - $previousKey == 1 && $selectedBlocks->count() > 0) {
+                    $previousBlock = $selectedBlocks[$selectedBlocks->count() - 1];
+                    $previousBlock['end'] = $block['end'];
+                    $previousBlock['price'] += $block['chargeable'] ? $block['price'] : 0;
+                    $selectedBlocks->put($selectedBlocks->count() - 1, $previousBlock);
+                } else {
+                    $selectedBlocks->push($block);
+                }
+                $previousKey = $key;
             }
-            $previousKey = $key;
+
+            dd($this->totalPriceBlocks, $selectedBlocks);
+            foreach ($selectedBlocks as $key => $selectedBlock) {
+                $utilityRegistration = UtilityRegistration::create([
+                    'customer_id' => $this->customer_id,
+                    'apartment_id' => $this->apartment_id,
+                    'registration_date'  => $this->registrationDate,
+                    'total_price'   => $this->totalPriceBlocks,
+                    'paid'      => false,
+                ]);
+                //dd($utilityRegistration);
+            }
+        } else {
         }
-        dd($selectedBlocks, $selected, $previousBlock);
     }
 }

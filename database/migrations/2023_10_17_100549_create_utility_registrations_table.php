@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('utility_registrations', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('utility_id')->constrained();
             $table->foreignUuid('customer_id')->constrained();
-            $table->date('date');
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->double('total_amount')->default(0);
+            $table->foreignUuid('apartment_id')->constrained();
+            $table->timestamp('registration_date');
+            $table->double('total_price')->default(0);
+            $table->double('prepay')->default(0);
+            $table->double('owe')->default(0);
+            $table->boolean('paid')->default(false);
+            $table->string('user_id')->nullable();
             $table->timestamps();
         });
     }

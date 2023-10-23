@@ -12,6 +12,18 @@ class UtilityRegistration extends Model
     use HasFactory;
     use HasUuids;
 
+
+    protected $fillable = [
+        'utility_id',
+        'customer_id',
+        'apartment_id',
+        'date',
+        'date_register',
+        'start_time',
+        'end_time',
+        'price',
+    ];
+
     public function utility(): BelongsTo
     {
         return $this->belongsTo(Utility::class);

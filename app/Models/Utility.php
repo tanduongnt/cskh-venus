@@ -18,6 +18,7 @@ class Utility extends Model
         'building_id',
         'utility_type_id',
         'name',
+        'registrable',
         'start_time',
         'end_time',
         'block',
@@ -41,7 +42,7 @@ class Utility extends Model
         return $this->belongsTo(UtilityType::class);
     }
 
-    public function registrationForms(): HasMany
+    public function utilityRegistrations(): HasMany
     {
         return $this->hasMany(UtilityRegistration::class);
     }

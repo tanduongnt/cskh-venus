@@ -109,6 +109,7 @@ class UtilityResource extends NestedResource
                         ->label('Thời gian kết thúc tính tiền'),
                     TextInput::make('price')
                         ->numeric()
+                        ->default(0)
                         ->label('Giá tiền (VNĐ)'),
                     RichEditor::make('description')
                         ->nullable()

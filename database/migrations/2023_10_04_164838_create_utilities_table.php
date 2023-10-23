@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->time('start_time');
             $table->time('end_time');
-            $table->boolean('registerable')->default(true);
+            $table->boolean('registrable')->default(true);
             $table->integer('block')->nullable();
             $table->double('price')->default(0);
             $table->boolean('charge_by_block')->default(true);

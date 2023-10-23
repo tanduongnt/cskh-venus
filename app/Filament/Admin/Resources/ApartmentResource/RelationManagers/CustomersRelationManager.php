@@ -67,7 +67,10 @@ class CustomersRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DetachAction::make()->label('Xóa')->modalHeading('Dữ liệu đã xóa không thể khôi phục')->successNotificationTitle('Xóa dữ liệu thành công'),
+                Tables\Actions\DetachAction::make()
+                ->label('Xóa')
+                ->modalHeading('Dữ liệu đã xóa không thể khôi phục')
+                ->successNotificationTitle('Xóa dữ liệu thành công'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
