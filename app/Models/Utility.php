@@ -42,8 +42,8 @@ class Utility extends Model
         return $this->belongsTo(UtilityType::class);
     }
 
-    public function utilityRegistrations(): HasMany
+    public function invoiceable()
     {
-        return $this->hasMany(UtilityRegistration::class);
+        return $this->morphOne(Invoiceable::class, 'invoiceable');
     }
 }

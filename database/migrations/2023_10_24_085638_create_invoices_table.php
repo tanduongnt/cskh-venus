@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('utility_registrations', function (Blueprint $table) {
+        Schema::create('invoices', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('customer_id')->constrained();
             $table->foreignUuid('apartment_id')->constrained();
-            $table->timestamp('registration_date');
-            $table->double('total_price')->default(0);
+            $table->timestamp('date');
+            $table->double('total_amount')->default(0);
             $table->double('prepay')->default(0);
             $table->double('owe')->default(0);
             $table->boolean('paid')->default(false);
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('utility_registrations');
+        Schema::dropIfExists('invoices');
     }
 };

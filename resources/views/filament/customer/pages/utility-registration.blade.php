@@ -3,10 +3,15 @@
         <div>
             {{ $this->form }}
         </div>
-        <div class="shadow-md bg-white rounded-lg p-3 m-2 text-center text-sm cursor-pointer">
-            Tổng tiền : {{$totalPriceBlocks}} VNĐ
+        <div class="shadow-md bg-white rounded-lg p-3 mt-2 text-center text-sm cursor-pointer">
+            Tổng tiền : {{$totalPriceBlocks}} VNĐ {{ Carbon\Carbon::parse($registration_date)?->format('d/m/Y') }}
+            <br>
+            @foreach ($invoiceables as $invoiceable)
+
+                {{ $invoiceables}}
+            @endforeach
         </div>
-        <div class="shadow-md bg-white rounded-lg p-6 m-2">
+        <div class="shadow-md bg-white rounded-lg p-6 mt-2">
             <div class="grid grid-cols-4 lg:grid-cols-6 gap-4">
                 @if ($utility_id)
                     @foreach ($blocks as $index => $block)
@@ -17,6 +22,8 @@
                                 'bg-sky-700' => $block['enable'] && $block['selected'],
                             ]) wire:click="selectBlock('{{ $index }}')">
                                 {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
+                                <br>
+                                {{ $block['registration']}}
                             </div>
                         @else
                             <div class="text-center text-sm text-white rounded-lg p-3 bg-gray-500">

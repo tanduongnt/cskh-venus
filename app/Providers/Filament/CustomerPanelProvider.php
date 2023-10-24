@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
+use App\Models\Invoiceable;
 use Filament\PanelProvider;
 use Filament\Facades\Filament;
 use Filament\Support\Colors\Color;
@@ -15,10 +16,12 @@ use Filament\Navigation\NavigationBuilder;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Customer\Pages\UtilityRegistration;
-use App\Filament\Customer\Pages\UtilityRegistrationPage;
+use App\Filament\Customer\Resources\InvoiceResource;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Filament\Customer\Pages\UtilityRegistrationPage;
+use App\Filament\Customer\Resources\InvoiceableResource;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -49,9 +52,9 @@ class CustomerPanelProvider extends PanelProvider
                     ->icon('heroicon-o-presentation-chart-line')
                     ->sort(3)
                     ->label('Đăng ký tiện ích'),
-                NavigationItem::make('ViewUtilityRe')
-                    //->url(fn (): string => UtilityRegistration::getUrl())
-                    ->icon('heroicon-o-presentation-chart-line')
+                NavigationItem::make('invoiceable')
+                    ->url(fn (): string => InvoiceResource::getUrl())
+                    ->icon('bi-file-text')
                     ->sort(3)
                     ->label('Chi tiết đăng ký'),
             ])
