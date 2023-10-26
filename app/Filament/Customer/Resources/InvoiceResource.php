@@ -53,7 +53,7 @@ class InvoiceResource extends Resource
             ->query(Invoice::query()->where('customer_id', Auth::id()))
             ->columns([
                 TextColumn::make('apartment.name')->label('Tên căn hộ'),
-                TextColumn::make('date')->dateTime('d/m/Y')->label('Ngày sử dụng'),
+                TextColumn::make('date')->dateTime('d/m/Y H:i:s')->label('Ngày đăng ký'),
                 TextColumn::make('total_amount')->money('VND')->label('Tổng tiền (VNĐ)'),
                 IconColumn::make('paid')->boolean()->label('Thanh toán'),
             ])

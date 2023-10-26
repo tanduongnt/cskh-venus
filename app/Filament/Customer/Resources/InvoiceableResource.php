@@ -55,7 +55,7 @@ class InvoiceableResource extends NestedResource
     {
         return $table
             ->columns([
-                TextColumn::make('registration_date')->dateTime('d/m/Y H:i:s')->label('Ngày đăng ký'),
+                TextColumn::make('registration_date')->dateTime('d/m/Y')->label('Ngày sử dụng'),
                 TextColumn::make('start')->dateTime('H:i:s')->label('Bắt đầu'),
                 TextColumn::make('end')->dateTime('H:i:s')->label('Kết thúc'),
                 TextColumn::make('price')->money('VND')->label('Tiền (VNĐ)'),

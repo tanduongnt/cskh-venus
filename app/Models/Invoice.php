@@ -18,7 +18,7 @@ class Invoice extends Model
         'customer_id',
         'apartment_id',
         'date',
-        'total_price',
+        'total_amonut',
         'prepay',
         'owe',
         'paid',

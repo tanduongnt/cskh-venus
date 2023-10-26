@@ -12,6 +12,7 @@
         "davidhsianturi/blade-bootstrap-icons": "^1.4",
         "filament/filament": "^3.0",
         "filament/forms": "^3.0",
+        "filament/notifications": "^3.0",
         "filament/tables": "^3.0",
         "filament/widgets": "^3.0",
         "guzzlehttp/guzzle": "^7.2",
