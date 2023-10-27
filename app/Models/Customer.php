@@ -54,9 +54,4 @@ class Customer extends Authenticatable
     {
         return $this->hasManyDeep(Building::class, ['apartment_customer', Apartment::class], ['customer_id', 'id', 'id'], [null, 'apartment_id', 'building_id']);
     }
-
-    public function registrationForms(): HasMany
-    {
-        return $this->hasMany(UtilityRegistration::class);
-    }
 }

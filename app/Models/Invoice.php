@@ -22,6 +22,12 @@ class Invoice extends Model
         'prepay',
         'owe',
         'paid',
+        'surcharge'
+    ];
+
+    protected $casts = [
+        'paid' => 'boolean',
+        'surcharge' => 'boolean',
     ];
 
     public function customer(): BelongsTo

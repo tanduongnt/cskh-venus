@@ -4,8 +4,13 @@
             {{ $this->form }}
         </div>
         @if ($utility_id)
-            <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 text-sm cursor-pointer">
-                    Tổng tiền : {{ $totalPriceBlocks }} VNĐ
+            <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
+                <div class="text-left text-sm">
+                    {{ $utility->chargeable ? 'Tổng tiền' : 'Tiền phụ thu' }} : {{ $totalPriceBlocks }} VNĐ.
+                </div>
+                <div class="text-right text-sm">
+                    Số lần đăng ký dịch vụ còn lại trong tháng : {{ $quantity }}.
+                </div>
             </div>
         @endif
         <div class="shadow-md bg-white rounded-lg p-6 mt-2">

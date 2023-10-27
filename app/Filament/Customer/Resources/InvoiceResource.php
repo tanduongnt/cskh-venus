@@ -54,6 +54,7 @@ class InvoiceResource extends Resource
             ->columns([
                 TextColumn::make('apartment.name')->label('Tên căn hộ'),
                 TextColumn::make('date')->dateTime('d/m/Y H:i:s')->label('Ngày đăng ký'),
+                IconColumn::make('surcharge')->boolean()->label('Phụ thu'),
                 TextColumn::make('total_amount')->money('VND')->label('Tổng tiền (VNĐ)'),
                 IconColumn::make('paid')->boolean()->label('Thanh toán'),
             ])
@@ -64,7 +65,7 @@ class InvoiceResource extends Resource
                 Action::make('invoiceables')
                     ->url(fn (Invoice $record): string => InvoiceableResource::getUrl('index', ['invoice' => $record->id]))
                     ->openUrlInNewTab()
-                    ->label('Chi tiết phiếu thu')
+                    ->label('Chi tiết')
                     ->icon('heroicon-s-clipboard')
                     ->color('success'),
                 //Tables\Actions\ViewAction::make(),

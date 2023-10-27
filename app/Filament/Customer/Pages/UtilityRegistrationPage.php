@@ -63,6 +63,7 @@ class UtilityRegistrationPage extends Page
     public ?string $date;
     public ?string $registration_date;
     public ?string $totalPriceBlocks;
+    public ?string $quantity;
 
     public ?Collection $buildings;
     public ?Collection $apartments;
@@ -255,19 +256,25 @@ class UtilityRegistrationPage extends Page
         }
     }
 
-
     public function generateUtilityBlocks()
     {
         $this->utility = Utility::find($this->utility_id);
         $this->blocks = collect();
-        $priceBlock = 0;
-        $invoices = Invoice::where('customer_id', $this->customer_id)->withWhereHas('invoiceables', function ($query) {
-            $query->whereDate('registration_date', Carbon::parse($this->registration_date)->toDateString());
-        })->get();
-        foreach ($invoices as $invoice) {
-            $priceBlock += $invoice->total_amount;
-        }
-        $this->totalPriceBlocks = $priceBlock ?? 0;
+        $quantityInvoices = Invoice::where('customer_id', $this->customer_id)->withWhereHas('invoiceables', function ($query) {
+            $query->whereHasMorph(
+                'invoiceable',
+                Utility::class,
+                function (Builder $query) {
+                    $query->where('id', $this->utility_id);
+                }
+            );
+        })->whereBetween('date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->count();
+        $this->quantity = $this->utility->quantity - $quantityInvoices;
+        //dd($quantityInvoices);
+        // foreach ($invoices as $invoice) {
+        //     $priceBlock += $invoice->total_amount;
+        // }
+        $this->totalPriceBlocks = 0;
         $this->invoiceables = Invoiceable::whereHasMorph(
             'invoiceable',
             Utility::class,
@@ -276,6 +283,7 @@ class UtilityRegistrationPage extends Page
             }
         )->whereDate('registration_date', Carbon::parse($this->registration_date)->toDateString())->get();
         if ($this->utility->block) {
+            //$quantity = $this->utility->quantity;
             $block_price = $this->utility->price;
             $blockCount = floor(1440 / $this->utility->block);
             $start_time = Carbon::parse($this->utility->start_time);
@@ -287,20 +295,20 @@ class UtilityRegistrationPage extends Page
                 $block_start = Carbon::today()->addMinutes($minutes);
                 $block_end = Carbon::today()->addMinutes($minutes + $this->utility->block);
                 $enable =  $start_time->lte($block_start) && $end_time->gte($block_end);
-                $chargeable = $this->utility->charge_by_block && $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
+                $chargeable = $this->utility->chargeable && $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
                 $price = ($enable && $chargeable) ? $block_price : 0;
-                $selected = $this->invoiceables->contains(function ($value, $key) use ($block_start, $block_end, $enable) {
-                    return $value['selected'] && $enable && Carbon::parse($value['start']) == $block_start && Carbon::parse($value['end']) == $block_end && ($value->invoice->customer_id == Auth::id());
-                });
+                // $selected = $this->invoiceables->contains(function ($value, $key) use ($block_start, $block_end, $enable) {
+                //     return $value['selected'] && $enable && Carbon::parse($value['start']) == $block_start && Carbon::parse($value['end']) == $block_end && ($value->invoice->customer_id == Auth::id());
+                // });
                 $registered = $this->invoiceables->contains(function ($value, $key) use ($block_start, $block_end, $enable) {
-                    return $enable && Carbon::parse($value['start']) == $block_start && Carbon::parse($value['end']) == $block_end && ($value->invoice->customer_id != Auth::id());
+                    return $enable && Carbon::parse($value['start']) == $block_start && Carbon::parse($value['end']) == $block_end && ($value->invoice->customer_id);
                 });
                 $this->blocks->push([
                     'enable'        => $enable,
                     'start'         => $block_start,
                     'end'           => $block_end,
                     'chargeable'    => $chargeable,
-                    'price'         => $price,
+                    'price'         => $this->utility->chargeable ? $price : $block_price,
                     'selected'      => $selected ?? false,
                     'registered'    => $registered,
                 ]);
@@ -311,52 +319,64 @@ class UtilityRegistrationPage extends Page
     public function selectBlock($index)
     {
         $block = $this->blocks[$index];
+        //dd($blocks);
         $block['selected'] = !$block['selected'];
         if ($block['chargeable']) {
             $price = ($block['selected']) ? $block['price'] : -$block['price'];
             $this->totalPriceBlocks += $price;
         }
         $this->blocks->put($index, $block);
+        if (!$this->utility->chargeable) {
+            $selected = $this->blocks->filter(function ($value, $key) {
+                return $value['selected'];
+            })->count();
+            $this->totalPriceBlocks = ($selected > 0) ? $this->utility->price : 0;
+        }
     }
 
     public function store(): void
     {
-        if ($this->utility->block) {
-            $selected = $this->blocks->filter(function ($value, $key) {
-                return $value['selected'];
-            });
-            //dd($selected, $this->totalPriceBlocks);
-            $invoice = Invoice::updateOrCreate([
-                'customer_id' => $this->customer_id,
-                'apartment_id' => $this->apartment_id,
+        $selected = $this->blocks->filter(function ($value, $key) {
+            return $value['selected'];
+        });
+        //dd($selected, $this->totalPriceBlocks);
+        // if ($this->invoiceables) {
+        //     $invoice = Invoice::updateOrCreate([
+        //         'customer_id' => $this->customer_id,
+        //         'apartment_id' => $this->apartment_id,
+        //     ], [
+        //         'date'  => now(),
+        //         'total_amount'   => $this->totalPriceBlocks,
+        //         'paid'      => false,
+        //     ]);
+
+        //     foreach ($this->invoiceables as $key => $value) {
+        //         $value->delete();
+        //     }
+        // } else {
+        // }
+        $invoice = Invoice::create([
+            'customer_id' => $this->customer_id,
+            'apartment_id' => $this->apartment_id,
+            'date'  => now(),
+            'surcharge' => $this->utility->chargeable ? false : true,
+            'total_amount'   => $this->totalPriceBlocks,
+            'paid'      => false,
+        ]);
+        foreach ($selected as $key => $block) {
+            $invoiceable = $this->utility->invoiceable()->updateOrCreate([
+                'invoice_id' => $invoice->id,
+                'registration_date' => $this->registration_date,
+                'start' => $block['start'],
+                'end' => $block['end'],
             ], [
-                'date'  => now(),
-                'total_amount'   => $this->totalPriceBlocks,
-                'paid'      => false,
+                'price' => $this->utility->chargeable ? $block['price'] : 0,
+                'selected' => $block['selected']
             ]);
-
-            if ($invoice->invoiceables) {
-                foreach ($invoice->invoiceables as $key => $value) {
-                    $value->delete();
-                }
-            }
-            foreach ($selected as $key => $block) {
-                $invoiceable = $this->utility->invoiceable()->updateOrCreate([
-                    'invoice_id' => $invoice->id,
-                    'registration_date' => $this->registration_date,
-                    'start' => $block['start'],
-                    'end' => $block['end'],
-                ], [
-                    'price' => $block['price'],
-                    'selected' => $block['selected']
-                ]);
-            }
-
-            Notification::make()
-                ->title('Đăng kí thành công')
-                ->success()
-                ->send();
-        } else {
         }
+        Notification::make()
+            ->title('Đăng kí thành công')
+            ->success()
+            ->send();
     }
 }
