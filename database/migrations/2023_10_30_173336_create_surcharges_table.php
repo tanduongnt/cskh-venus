@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('invoiceables', function (Blueprint $table) {
+        Schema::create('surcharges', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('invoice_id')->constrained();
-            $table->uuidMorphs('invoiceable');
-            $table->timestamp('registration_date');
-            $table->time('start')->nullable();
-            $table->time('end')->nullable();
+            $table->foreignUuid('utility_id')->constrained();
+            $table->timestamp('name');
             $table->double('price')->default(0);
             $table->timestamps();
         });
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('invoiceables');
+        Schema::dropIfExists('surcharges');
     }
 };

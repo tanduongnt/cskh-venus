@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('invoiceables', function (Blueprint $table) {
+        Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('invoice_id')->constrained();
-            $table->uuidMorphs('invoiceable');
-            $table->timestamp('registration_date');
-            $table->time('start')->nullable();
-            $table->time('end')->nullable();
-            $table->double('price')->default(0);
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('invoiceables');
+        Schema::dropIfExists('notifications');
     }
 };

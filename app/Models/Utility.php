@@ -24,7 +24,6 @@ class Utility extends Model
         'block',
         'price',
         'quantity',
-        'chargeable',
         'charge_start_time',
         'charge_end_time',
         'description',
@@ -45,6 +44,11 @@ class Utility extends Model
     public function utilityType(): BelongsTo
     {
         return $this->belongsTo(UtilityType::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Surcharge::class);
     }
 
     public function invoiceable()
