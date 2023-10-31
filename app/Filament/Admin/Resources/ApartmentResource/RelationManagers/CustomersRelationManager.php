@@ -20,6 +20,8 @@ class CustomersRelationManager extends RelationManager
 
     protected static ?string $title = 'Thành viên';
 
+    protected static ?string $pluralModelLabel = 'Thành viên';
+
     public function form(Form $form): Form
     {
         return $form

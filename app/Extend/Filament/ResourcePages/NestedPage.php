@@ -15,6 +15,7 @@ use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\Route;
 use App\Extend\Filament\NestedResource;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\EditAction as PageEditAction;
@@ -103,6 +104,15 @@ trait NestedPage
 
         // If it is a view page we need to add the current entry.
         if ($this instanceof ViewRecord) {
+            if ($resource::canEdit($this->record)) {
+                $nestedCrumbs[$resource::getUrl('edit', $this->urlParameters)] = $this->getRecordTitle();
+            } else {
+                $nestedCrumbs[] = $this->getTitle();
+            }
+        }
+
+        // If it is a edit page we need to add the current entry.
+        if ($this instanceof EditRecord) {
             if ($resource::canEdit($this->record)) {
                 $nestedCrumbs[$resource::getUrl('edit', $this->urlParameters)] = $this->getRecordTitle();
             } else {

@@ -96,10 +96,6 @@ class UtilityResource extends NestedResource
                     TextInput::make('block')
                         ->numeric()
                         ->label('Block (phút)'),
-                    Toggle::make('chargeable')
-                        ->default(true)
-                        ->label('Tính tiền theo block')
-                        ->columnSpan('full'),
                     TimePicker::make('charge_start_time')
                         ->afterOrEqual('start_time')
                         ->native(false)
@@ -119,7 +115,7 @@ class UtilityResource extends NestedResource
                         ->numeric()
                         ->default(0)
                         ->label('Giá tiền (VNĐ)'),
-                    TextInput::make('quantity')
+                    TextInput::make('max_times')
                         ->numeric()
                         ->label('Giới hạn đăng ký mỗi tháng'),
                     RichEditor::make('description')
@@ -159,7 +155,7 @@ class UtilityResource extends NestedResource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\SurchargesRelationManager::class
         ];
     }
 

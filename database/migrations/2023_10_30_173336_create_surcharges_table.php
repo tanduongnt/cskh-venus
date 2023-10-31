@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('surcharges', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('utility_id')->constrained();
-            $table->timestamp('name');
+            $table->string('name');
             $table->double('price')->default(0);
+            $table->boolean('fixed')->default(1);
             $table->timestamps();
         });
     }

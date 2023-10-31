@@ -23,7 +23,7 @@ class Utility extends Model
         'end_time',
         'block',
         'price',
-        'quantity',
+        'max_times',
         'charge_start_time',
         'charge_end_time',
         'description',
@@ -46,7 +46,7 @@ class Utility extends Model
         return $this->belongsTo(UtilityType::class);
     }
 
-    public function comments()
+    public function surcharges(): HasMany
     {
         return $this->hasMany(Surcharge::class);
     }

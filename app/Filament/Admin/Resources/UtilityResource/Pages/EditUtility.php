@@ -13,9 +13,9 @@ class EditUtility extends EditRecord
 
     protected static string $resource = UtilityResource::class;
 
-    protected static ?string $title = 'Cập nhật';
+    protected static ?string $title = 'Chỉnh sửa';
 
-    protected static ?string $breadcrumb = 'Cập nhật';
+    protected static ?string $breadcrumb = 'Chỉnh sửa';
 
     protected function getRedirectUrl(): string
     {

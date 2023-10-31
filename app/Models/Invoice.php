@@ -27,7 +27,6 @@ class Invoice extends Model
 
     protected $casts = [
         'paid' => 'boolean',
-        'surcharge' => 'boolean',
     ];
 
     public function customer(): BelongsTo

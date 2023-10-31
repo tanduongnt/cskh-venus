@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Surcharge extends Model
 {
@@ -15,6 +16,12 @@ class Surcharge extends Model
         'utility_id',
         'name',
         'price',
+        'fixed',
+    ];
+
+
+    protected $casts = [
+        'fixed' => 'boolean',
     ];
 
     public function invoiceable()
@@ -23,9 +30,8 @@ class Surcharge extends Model
     }
 
 
-    public function utility()
+    public function utility(): BelongsTo
     {
-        return $this->belongsTo(Utility::clearBootedModels());
+        return $this->belongsTo(Utility::class);
     }
-
 }

@@ -21,8 +21,7 @@ return new class extends Migration
             $table->boolean('registrable')->default(true);
             $table->integer('block')->nullable();
             $table->double('price')->default(0);
-            $table->integer('quantity')->nullable();
-            $table->boolean('chargeable')->default(true);
+            $table->integer('max_times')->nullable();
             $table->time('charge_start_time')->nullable();
             $table->time('charge_end_time')->nullable();
             $table->longText('description')->nullable();

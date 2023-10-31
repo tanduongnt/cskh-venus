@@ -63,8 +63,11 @@ class UtilityRegistrationPage extends Page
     public ?string $utility_id;
     public ?string $date;
     public ?string $registration_date;
+    public ?string $totalPriceSurcharge;
     public ?string $totalPriceBlocks;
-    public ?string $quantity;
+    public ?string $totalAmount;
+    public ?string $remainingTimes;
+    public ?string $priceNotFixed;
 
     public ?Collection $buildings;
     public ?Collection $apartments;
@@ -83,6 +86,8 @@ class UtilityRegistrationPage extends Page
         $this->customer_id = Auth::id();
         $this->registration_date = now()->toDateString();
         $this->totalPriceBlocks = 0;
+        $this->totalPriceSurcharge = 0;
+        $this->totalAmount = 0;
 
         $this->buildings = Building::withWhereHas('apartments', function ($query) {
             $query->whereHas('customers', function ($query) {
@@ -261,17 +266,14 @@ class UtilityRegistrationPage extends Page
     {
         $this->utility = Utility::find($this->utility_id);
         $this->blocks = collect();
-        $quantityInvoices = Invoice::where('customer_id', $this->customer_id)->withWhereHas('invoiceables', function ($query) {
-            $query->whereHasMorph(
-                'invoiceable',
-                Utility::class,
-                function (Builder $query) {
-                    $query->where('id', $this->utility_id);
-                }
-            );
-        })->whereBetween('date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->count();
-        $this->quantity = $this->utility->quantity - $quantityInvoices;
+        $this->remainingTimes = $this->soLanDangKyConLaiTrongThang();
+        $this->totalPriceSurcharge = 0;
+        $this->totalAmount = 0;
         $this->totalPriceBlocks = 0;
+        $this->priceNotFixed = 0;
+        foreach ($this->utility->surcharges as $key => $surcharge) {
+            $this->totalPriceSurcharge += $surcharge->fixed ? $surcharge->price : 0;
+        }
         if ($this->utility->block) {
             $block_price = $this->utility->price;
             $blockCount = floor(1440 / $this->utility->block);
@@ -284,10 +286,10 @@ class UtilityRegistrationPage extends Page
                 $block_start = Carbon::today()->addMinutes($minutes);
                 $block_end = Carbon::today()->addMinutes($minutes + $this->utility->block);
                 $enable =  $start_time->lte($block_start) && $end_time->gte($block_end);
-                $chargeableBlock = $this->utility->chargeable && $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
+                $chargeableBlock = $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
                 $price = ($enable && $chargeableBlock) ? $block_price : 0;
                 // $selected = $this->invoiceables->contains(function ($value, $key) use ($block_start, $block_end, $enable) {
-                //     return $value['selected'] && $enable && Carbon::parse($value['start']) == $block_start && Carbon::parse($value['end']) == $block_end && ($value->invoice->customer_id == Auth::id());
+                //     return $enable && Carbon::parse($value['start']) == $block_start && Carbon::parse($value['end']) == $block_end && ($value->invoice->customer_id == Auth::id());
                 // });
                 $registered = $this->kiemTraDangKyHayChua($block_start, $block_end) > 0;
                 $this->blocks->push([
@@ -295,7 +297,7 @@ class UtilityRegistrationPage extends Page
                     'start'         => $block_start,
                     'end'           => $block_end,
                     'chargeable'    => $chargeableBlock,
-                    'price'         => $this->utility->chargeable ? $price : $block_price,
+                    'price'         => $price,
                     'selected'      => $selected ?? false,
                     'registered'    => $registered,
                 ]);
@@ -311,32 +313,28 @@ class UtilityRegistrationPage extends Page
             $price = ($block['selected']) ? $block['price'] : -$block['price'];
             $this->totalPriceBlocks += $price;
         }
-        $this->blocks->put($index, $block);
-        if (!$this->utility->chargeable) {
-            $selected = $this->blocks->filter(function ($value, $key) {
-                return $value['selected'];
-            })->count();
-            $this->totalPriceBlocks = ($selected > 0) ? $this->utility->price : 0;
+        if ($this->utility->surcharges->count() > 0) {
+            $surchargesNotFixed = $this->utility->surcharges->filter(function ($value, $key) {
+                return !$value['fixed'];
+            });
+            foreach ($surchargesNotFixed as $value) {
+                $priceNotFixed = $price * $value['price'] / 100;
+            }
+            $this->priceNotFixed += $priceNotFixed;
+            $this->totalPriceSurcharge += $priceNotFixed;
         }
+        $this->totalAmount = $this->totalPriceBlocks ? $this->totalPriceSurcharge + $this->totalPriceBlocks : 0;
+        $this->blocks->put($index, $block);
     }
 
     public function store()
     {
-        $invoiceables = [];
-        $quantityInvoices = Invoice::where('customer_id', $this->customer_id)->withWhereHas('invoiceables', function ($query) {
-            $query->whereHasMorph(
-                'invoiceable',
-                Utility::class,
-                function (Builder $query) {
-                    $query->where('id', $this->utility_id);
-                }
-            );
-        })->whereBetween('date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->count();
-        $quantity = $this->utility->quantity - $quantityInvoices;
+        $invoiceables = collect();
+        $remainingTimes = $this->soLanDangKyConLaiTrongThang();
         $selectedBlocks = $this->blocks->filter(function ($value, $key) {
             return $value['selected'];
         });
-        dd($selectedBlocks);
+        //dd($selectedBlocks);
 
         foreach ($selectedBlocks as $key => $block) {
             $start = $block['start'];
@@ -347,29 +345,37 @@ class UtilityRegistrationPage extends Page
                 Notification::make()->title('Đã có người đăng ký thời gian này')->danger()->send();
                 break;
             } else {
-                $invoiceables[] = [
+                $invoiceables->push([
+                    'registration_date' => $this->registration_date,
                     'start' => $start,
                     'end' => $end,
                     'price' => $block['price'],
-                ];
+                ]);
             }
         }
-        if ($quantity > 0) {
+        //dd($invoiceables);
+        if ($remainingTimes > 0) {
             $invoice = Invoice::create([
                 'customer_id' => $this->customer_id,
                 'apartment_id' => $this->apartment_id,
                 'date'  => now(),
-                'surcharge' => $this->utility->chargeable ? false : true,
-                'total_amount'   => $this->totalPriceBlocks,
+                'surcharge' => $this->totalPriceSurcharge,
+                'amount'   => $this->totalPriceBlocks,
+                'total_amount'   => $this->totalAmount,
                 'paid'      => false,
             ]);
-            $this->utility->invoiceable()->create([
-                'invoice_id' => $invoice->id,
-                'registration_date' => $this->registration_date,
-                'start' => $block['start'],
-                'end' => $block['end'],
-                'price' => $this->utility->chargeable ? $block['price'] : 0,
-            ]);
+            $invoiceables->transform(function ($item, $key) use ($invoice) {
+                $item['invoice_id'] = $invoice->id;
+                return $item;
+            });
+            $this->utility->invoiceable()->createMany($invoiceables);
+            foreach ($this->utility->surcharges as $key => $surcharge) {
+                $surcharge->invoiceable()->create([
+                    'invoice_id' => $invoice->id,
+                    'registration_date' => $this->registration_date,
+                    'price' => $surcharge['price'],
+                ]);
+            }
             Notification::make()
                 ->title('Đăng kí thành công')
                 ->success()
@@ -378,8 +384,6 @@ class UtilityRegistrationPage extends Page
             $this->generateUtilityBlocks();
             Notification::make()->title('Đã hết lượt đăng ký')->danger()->send();
         }
-        //dd($this->quantity, $quantity);
-        //dd($this->invoiceables(), $unableToInvoice);
     }
 
     public function kiemTraDangKyHayChua($start, $end)
@@ -395,5 +399,20 @@ class UtilityRegistrationPage extends Page
             ->where('start', $start)
             ->where('end', $end)
             ->count();
+    }
+
+    public function soLanDangKyConLaiTrongThang()
+    {
+        $registrationCount = Invoice::where('customer_id', $this->customer_id)
+            ->withWhereHas('invoiceables', function ($query) {
+                $query->whereHasMorph(
+                    'invoiceable',
+                    Utility::class,
+                    function (Builder $query) {
+                        $query->where('id', $this->utility_id);
+                    }
+                );
+            })->whereBetween('date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->count();
+        return $this->utility->max_times - $registrationCount;
     }
 }
