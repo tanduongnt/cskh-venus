@@ -7,16 +7,22 @@ use Filament\Tables;
 use App\Models\Invoice;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\Invoiceable;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\DateTimePicker;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Customer\Resources\InvoiceResource\Pages;
 use App\Filament\Customer\Resources\InvoiceResource\RelationManagers;
-use App\Models\Invoiceable;
 
 class InvoiceResource extends Resource
 {
@@ -43,8 +49,34 @@ class InvoiceResource extends Resource
     {
         return $form
             ->schema([
-                //
-            ]);
+                Section::make()->schema([
+                    Select::make('apartment_id')
+                        ->relationship(name: 'apartment', titleAttribute: 'name')
+                        ->label('Căn hộ'),
+                    DateTimePicker::make('date')
+                        ->required()
+                        ->native(false)
+                        ->minutesStep(30)
+                        ->displayFormat('d/m/Y H:i')
+                        ->label('Ngày đăng ký'),
+                ])->columnSpan(2),
+
+                Section::make()
+                    ->schema([
+                        TextInput::make('amount')
+                            ->nullable()
+                            ->numeric()
+                            ->label('Phí đăng ký'),
+                        TextInput::make('surcharge')
+                            ->nullable()
+                            ->numeric()
+                            ->label('Phụ thu'),
+                        TextInput::make('total_amount')
+                            ->nullable()
+                            ->numeric()
+                            ->label('Tổng tiền'),
+                    ])->columnSpan(1),
+            ])->columns(3);
     }
 
     public static function table(Table $table): Table
@@ -82,7 +114,7 @@ class InvoiceResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\InvoiceablesRelationManager::class
         ];
     }
 

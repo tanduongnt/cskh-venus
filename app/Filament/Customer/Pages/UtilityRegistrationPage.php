@@ -16,6 +16,7 @@ use App\Models\Invoiceable;
 use App\Models\UtilityType;
 use Illuminate\Support\Str;
 use App\Models\RegistrationForm;
+use App\Models\Surcharge;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
@@ -61,13 +62,14 @@ class UtilityRegistrationPage extends Page
     public ?string $apartment_id;
     public ?string $utility_type_id;
     public ?string $utility_id;
-    public ?string $date;
     public ?string $registration_date;
-    public ?string $totalPriceSurcharge;
-    public ?string $totalPriceBlocks;
-    public ?string $totalAmount;
+    public float $totalSurchargeAmount = 0;
+    public float $totalBlockAmount = 0;
     public ?string $remainingTimes;
-    public ?string $priceNotFixed;
+    public float $priceNotFixed = 0;
+
+
+    public $selectedSurcharges = [];
 
     public ?Collection $buildings;
     public ?Collection $apartments;
@@ -76,19 +78,13 @@ class UtilityRegistrationPage extends Page
     public ?Utility $utility;
     public ?Collection $blocks;
     public ?Collection $selectedBlocks;
-    public ?Collection $invoiceables;
-    public ?Collection $registrationBlocks;
+    public ?Collection $surchargeList;
 
     public function mount()
     {
         $this->blocks = collect();
-        $this->invoiceables = collect();
         $this->customer_id = Auth::id();
         $this->registration_date = now()->toDateString();
-        $this->totalPriceBlocks = 0;
-        $this->totalPriceSurcharge = 0;
-        $this->totalAmount = 0;
-
         $this->buildings = Building::withWhereHas('apartments', function ($query) {
             $query->whereHas('customers', function ($query) {
                 $query->where('customer_id', Auth::id());
@@ -262,17 +258,29 @@ class UtilityRegistrationPage extends Page
         }
     }
 
+    public function updatedSelectedSurcharges()
+    {
+        $this->loadDanhSachPhuThu();
+    }
+
     public function generateUtilityBlocks()
     {
         $this->utility = Utility::find($this->utility_id);
+        $this->surchargeList = $this->utility->surcharges;
         $this->blocks = collect();
         $this->remainingTimes = $this->soLanDangKyConLaiTrongThang();
-        $this->totalPriceSurcharge = 0;
-        $this->totalAmount = 0;
-        $this->totalPriceBlocks = 0;
+        $this->totalSurchargeAmount = 0;
+        $this->totalBlockAmount = 0;
         $this->priceNotFixed = 0;
-        foreach ($this->utility->surcharges as $key => $surcharge) {
-            $this->totalPriceSurcharge += $surcharge->fixed ? $surcharge->price : 0;
+        if ($this->surchargeList->count() > 0) {
+            $this->selectedSurcharges = $this->surchargeList->filter(function ($value, $key) {
+                return $value['default'];
+            })->pluck('id')->toArray();
+        }
+        $selectedSurchargeList = $this->surchargeList->whereIn('id', $this->selectedSurcharges);
+        //dd($this->selectedSurcharges, $surcharges);
+        foreach ($selectedSurchargeList as $key => $surcharge) {
+            $this->totalSurchargeAmount += ($surcharge->fixed) ? $surcharge->price : 0;
         }
         if ($this->utility->block) {
             $block_price = $this->utility->price;
@@ -307,35 +315,27 @@ class UtilityRegistrationPage extends Page
 
     public function selectBlock($index)
     {
+        $priceSurcharge = 0;
         $block = $this->blocks[$index];
         $block['selected'] = !$block['selected'];
         if ($block['chargeable']) {
             $price = ($block['selected']) ? $block['price'] : -$block['price'];
-            $this->totalPriceBlocks += $price;
+            $this->totalBlockAmount += $price;
         }
-        if ($this->utility->surcharges->count() > 0) {
-            $surchargesNotFixed = $this->utility->surcharges->filter(function ($value, $key) {
-                return !$value['fixed'];
-            });
-            foreach ($surchargesNotFixed as $value) {
-                $priceNotFixed = $price * $value['price'] / 100;
-            }
-            $this->priceNotFixed += $priceNotFixed;
-            $this->totalPriceSurcharge += $priceNotFixed;
-        }
-        $this->totalAmount = $this->totalPriceBlocks ? $this->totalPriceSurcharge + $this->totalPriceBlocks : 0;
         $this->blocks->put($index, $block);
+        $this->loadDanhSachPhuThu();
+        //dd($priceSurcharge, $this->selectedSurcharges, $this->totalSurchargeAmount);
     }
 
     public function store()
     {
+        dd($this->selectedSurcharges);
         $invoiceables = collect();
         $remainingTimes = $this->soLanDangKyConLaiTrongThang();
         $selectedBlocks = $this->blocks->filter(function ($value, $key) {
             return $value['selected'];
         });
         //dd($selectedBlocks);
-
         foreach ($selectedBlocks as $key => $block) {
             $start = $block['start'];
             $end = $block['end'];
@@ -359,8 +359,8 @@ class UtilityRegistrationPage extends Page
                 'customer_id' => $this->customer_id,
                 'apartment_id' => $this->apartment_id,
                 'date'  => now(),
-                'surcharge' => $this->totalPriceSurcharge,
-                'amount'   => $this->totalPriceBlocks,
+                'surcharge' => $this->totalSurchargeAmount,
+                'amount'   => $this->totalBlockAmount,
                 'total_amount'   => $this->totalAmount,
                 'paid'      => false,
             ]);
@@ -369,7 +369,7 @@ class UtilityRegistrationPage extends Page
                 return $item;
             });
             $this->utility->invoiceable()->createMany($invoiceables);
-            foreach ($this->utility->surcharges as $key => $surcharge) {
+            foreach ($this->surchargeList as $key => $surcharge) {
                 $surcharge->invoiceable()->create([
                     'invoice_id' => $invoice->id,
                     'registration_date' => $this->registration_date,
@@ -414,5 +414,50 @@ class UtilityRegistrationPage extends Page
                 );
             })->whereBetween('date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->count();
         return $this->utility->max_times - $registrationCount;
+    }
+
+    public function tinhTienPhuThu()
+    {
+    }
+
+    public function loadDanhSachPhuThu()
+    {
+        $this->totalSurchargeAmount = 0;
+        $this->selectedSurcharges = [];
+        // Lấy danh sách phụ thu theo tiện ích
+        $this->surchargeList = $this->utility->surcharges;
+        if ($this->surchargeList->count() > 0) {
+            // Đếm số block được chọn
+            $selectedBlocks = $this->blocks->filter(function ($value, $key) {
+                return $value['selected'];
+            });
+            $selectedBlockCount = $selectedBlocks->count();
+            $selectedBlockAmount = $selectedBlocks->sum('price');
+            $this->surchargeList->transform(function ($item, $key) use ($selectedBlockCount, $selectedBlockAmount) {
+                $quantity = $item['by_block'] ? $selectedBlockCount : 1;
+                $price = $item['price'];
+                if (!$item['fixed']) {
+                    $price = $selectedBlockAmount * $item['price'] / 100;
+                }
+                $amount = $quantity * $price;
+                $item['quantity'] = $quantity;
+                $item['amount'] = $amount;
+                return $item;
+            });
+            // lấy danh sách phụ thu mặc định
+            $defaultSurcharges = $this->surchargeList->filter(function ($value, $key) {
+                return $value['default'];
+            });
+            // gán những phụ thu mặc định vào danh sách phụ thu đã chọn
+            if ($defaultSurcharges->count() > 0) {
+                $this->selectedSurcharges = $defaultSurcharges->pluck('id')->toArray();
+            }
+            // Lấy danh sách phụ thu được chọn theo id
+            $selectedSurchargeList = $this->surchargeList->whereIn('id', $this->selectedSurcharges);
+            // Tính tổng tiền phụ thu được chọn
+            if ($selectedSurchargeList->count() > 0) {
+                $this->totalSurchargeAmount = $this->surchargeList->sum('amount');
+            }
+        }
     }
 }

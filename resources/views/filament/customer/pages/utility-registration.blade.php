@@ -3,44 +3,6 @@
         <div>
             {{ $this->form }}
         </div>
-        @if ($utility_id)
-            <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
-                <table class="min-w-full divide-y divide-gray-300">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Tên phụ thu</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mức thu</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Thành tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                        @foreach ($utility->surcharges as $surcharge)
-                            <tr>
-                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->name }}</td>
-                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->price }}{{ $surcharge->fixed ? 'đ' : '%' }}</td>
-                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->fixed ? $surcharge->price : $priceNotFixed }}đ</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                </table>
-            </div>
-
-            <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="text-left text-sm">
-                        Phí đăng ký: {{ $totalPriceBlocks }}đ.
-                        <br>
-                        Phí phụ thu: {{ $totalPriceSurcharge }}đ.
-                        <br>
-                        Tổng tiền: {{ $totalAmount }}đ.
-                    </div>
-                    <div class="text-right text-sm">
-                        Số lần đăng ký dịch vụ còn lại trong tháng : {{ $remainingTimes }}.
-                    </div>
-                </div>
-            </div>
-        @endif
         <div class="shadow-md bg-white rounded-lg p-6 mt-2">
             @if ($utility_id)
                 @if ($remainingTimes > 0)
@@ -78,6 +40,56 @@
                 </div>
             @endif
         </div>
+
+        @if ($utility_id)
+            <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
+                <table class="min-w-full divide-y divide-gray-300">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Chọn</th>
+                            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Tên phụ thu</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mức thu</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        @foreach ($utility->surcharges->sortByDesc('default') as $surcharge)
+                            <tr>
+                                <td class="relative w-12 px-6 sm:w-16 sm:px-8">
+                                    <input type="checkbox" wire:model.change="selectedSurcharges" value="{{ $surcharge->id }}"  @class([
+                                        'absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6',
+                                        'text-indigo-600' => !$surcharge->default,
+                                        'text-gray-300' => $surcharge->default,
+                                    ]) {{$surcharge->default ? 'disabled' : ''}} >
+                                  </td>
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->name }}</td>
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->price }}{{ $surcharge->fixed ? 'đ' : '%' }}</td>
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->amount }}đ</td>
+                            </tr>
+                        @endforeach
+                        @foreach ($selectedSurcharges as $selectedSurcharge)
+                            {{ $selectedSurcharge}} <br>
+                        @endforeach
+                    </tbody>
+                </table>
+                </table>
+            </div>
+
+            <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-left text-sm">
+                        Phí đăng ký: {{ $totalBlockAmount }}đ.
+                        <br>
+                        Phí phụ thu: {{ $totalSurchargeAmount }}đ.
+                        <br>
+                        Tổng tiền: {{ $totalBlockAmount + $totalSurchargeAmount}}đ.
+                    </div>
+                    <div class="text-right text-sm">
+                        Số lần đăng ký dịch vụ còn lại trong tháng : {{ $remainingTimes }}.
+                    </div>
+                </div>
+            </div>
+        @endif
         <div>
             <x-filament::button class="mt-2" type="submit">
                 Hoàn tất

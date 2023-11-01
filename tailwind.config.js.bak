@@ -8,3 +8,4 @@ export default {
         './vendor/filament/**/*.blade.php',
     ],
 }
+

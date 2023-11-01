@@ -14,12 +14,17 @@ class Invoiceable extends Model
 
 
     protected $fillable = [
+        'invoiceable_type',
         'invoice_id',
         'registration_date',
         'start',
         'end',
         'price',
         'user_id',
+    ];
+
+    protected $casts = [
+        //'invoiceable_type' => InvoiceableType::class,
     ];
 
     public function customer(): BelongsTo

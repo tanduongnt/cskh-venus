@@ -33,9 +33,17 @@ class SurchargesRelationManager extends RelationManager
                     ->maxLength(255)
                     ->label('Mức thu')
                     ->hint('Số tiền cố định hoặc phần trăm (%)'),
+                Forms\Components\Toggle::make('default')
+                    ->default(1)
+                    ->label('Mặc định')
+                    ->hint('Phụ thu bắt buộc khi đăng ký tiện ích'),
                 Forms\Components\Toggle::make('fixed')
                     ->default(1)
                     ->label('Cố định'),
+                Forms\Components\Toggle::make('by_block')
+                    ->default(1)
+                    ->label('Tính theo block')
+                    ->hint('Phụ thu được tính theo số lượng block đăng ký'),
             ]);
     }
 
@@ -44,9 +52,11 @@ class SurchargesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
+                Tables\Columns\IconColumn::make('default')->boolean()->label('Mặc định'),
                 Tables\Columns\TextColumn::make('name')->label('Tên'),
                 Tables\Columns\TextColumn::make('price')->label('Mức thu'),
                 Tables\Columns\IconColumn::make('fixed')->boolean()->label('Cố định'),
+                Tables\Columns\IconColumn::make('by_block')->boolean()->label('Tính theo block'),
             ])
             ->filters([
                 //
