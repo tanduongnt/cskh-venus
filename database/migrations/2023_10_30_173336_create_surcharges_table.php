@@ -19,6 +19,7 @@ return new class extends Migration
             $table->double('price')->default(false);
             $table->boolean('fixed')->default(true);
             $table->boolean('by_block')->default(true);
+            $table->boolean('active')->default(true);
             $table->timestamps();
         });
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\InvoiceableType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,7 +25,6 @@ class Invoiceable extends Model
     ];
 
     protected $casts = [
-        //'invoiceable_type' => InvoiceableType::class,
     ];
 
     public function customer(): BelongsTo

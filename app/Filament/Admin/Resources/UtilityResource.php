@@ -83,7 +83,7 @@ class UtilityResource extends NestedResource
                         ->seconds(false)
                         ->minutesStep(30)
                         ->displayFormat('H:i')
-                        ->label('Thời gian bắt đầu'),
+                        ->label('Bắt đầu'),
                     TimePicker::make('end_time')
                         ->after('start_time')
                         ->default('23:59')
@@ -92,17 +92,17 @@ class UtilityResource extends NestedResource
                         ->minutesStep(30)
                         ->native(false)
                         ->displayFormat('H:i')
-                        ->label('Thời gian kết thúc'),
+                        ->label('Kết thúc'),
                     TextInput::make('block')
                         ->numeric()
-                        ->label('Block (phút)'),
+                        ->label('Thời gian mỗi block (phút)'),
                     TimePicker::make('charge_start_time')
                         ->afterOrEqual('start_time')
                         ->native(false)
                         ->seconds(false)
                         ->minutesStep(30)
                         ->displayFormat('H:i')
-                        ->label('Thời gian bắt đầu tính tiền'),
+                        ->label('Bắt đầu tính tiền'),
                     TimePicker::make('charge_end_time')
                         ->beforeOrEqual('end_time')
                         ->after('charge_start_time')
@@ -110,14 +110,15 @@ class UtilityResource extends NestedResource
                         ->seconds(false)
                         ->minutesStep(30)
                         ->displayFormat('H:i')
-                        ->label('Thời gian kết thúc tính tiền'),
+                        ->label('Kết thúc tính tiền'),
                     TextInput::make('price')
                         ->numeric()
                         ->default(0)
-                        ->label('Giá tiền (VNĐ)'),
+                        ->label('Giá tiền mỗi block'),
                     TextInput::make('max_times')
                         ->numeric()
-                        ->label('Giới hạn đăng ký mỗi tháng'),
+                        ->label('Giới hạn mỗi tháng')
+                        ->helperText('Nếu không giới hạn thì bằng 0'),
                     RichEditor::make('description')
                         ->nullable()
                         ->label('Mô tả')

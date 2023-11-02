@@ -64,17 +64,11 @@ class InvoiceResource extends Resource
                 Section::make()
                     ->schema([
                         TextInput::make('amount')
-                            ->nullable()
-                            ->numeric()
-                            ->label('Phí đăng ký'),
+                            ->label('Phí đăng ký (đ)'),
                         TextInput::make('surcharge')
-                            ->nullable()
-                            ->numeric()
-                            ->label('Phụ thu'),
+                            ->label('Phụ thu (đ)'),
                         TextInput::make('total_amount')
-                            ->nullable()
-                            ->numeric()
-                            ->label('Tổng tiền'),
+                            ->label('Tổng tiền (đ)'),
                     ])->columnSpan(1),
             ])->columns(3);
     }
@@ -90,23 +84,18 @@ class InvoiceResource extends Resource
                 TextColumn::make('surcharge')->money('VND')->label('Phụ thu'),
                 TextColumn::make('total_amount')->money('VND')->label('Tổng tiền'),
                 IconColumn::make('paid')->boolean()->label('Thanh toán'),
+                IconColumn::make('active')->boolean()->label('Hoạt động'),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Action::make('invoiceables')
-                    ->url(fn (Invoice $record): string => InvoiceableResource::getUrl('index', ['invoice' => $record->id]))
-                    ->openUrlInNewTab()
-                    ->label('Chi tiết')
-                    ->icon('heroicon-s-clipboard')
-                    ->color('success'),
                 //Tables\Actions\ViewAction::make(),
                 //Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    //Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

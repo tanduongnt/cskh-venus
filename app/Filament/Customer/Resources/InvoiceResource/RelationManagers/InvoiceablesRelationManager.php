@@ -9,6 +9,7 @@ use Filament\Tables\Table;
 use App\Models\Invoiceable;
 use App\Enums\InvoiceableType;
 use App\Enums\InvoiceableTypeEnum;
+use App\Models\Surcharge;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,15 +40,18 @@ class InvoiceablesRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('invoiceables')
-            // ->groups([
-            //     Group::make('invoiceable_type')
-            //         ->label('Loại')
-            //         ->getTitleFromRecordUsing(fn (Invoiceable $record): string => $record->invoiceable_type),
-            // ])->defaultGroup('invoiceable_type')
             ->columns([
                 TextColumn::make('registration_date')->dateTime('d/m/Y')->label('Ngày sử dụng'),
                 TextColumn::make('invoiceable.name')->label('Tên')->description(fn (Invoiceable $record): string => ($record->invoiceable_type == 'App\Models\Utility') ? "Từ {$record->start} đến {$record->end}" : ""),
-                TextColumn::make('price')->money('VND')->label('Tiền (VNĐ)'),
+                TextColumn::make('price')->formatStateUsing(function (Invoiceable $record, string $state) {
+                    if ($record->invoiceable_type == 'App\Models\Surcharge') {
+                        $surcharge = Surcharge::find($record->invoiceable_id);
+                        $state = ($surcharge->fixed) ? "{$state}đ" : "{$state}%";
+                        return $state;
+                    } else {
+                        return "{$state}đ";
+                    }
+                })->label('Mức thu'),
             ])
             ->filters([
                 //

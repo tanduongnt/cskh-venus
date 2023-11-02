@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('invoiceables', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('invoice_id')->constrained();
+            $table->foreignUuid('invoice_id')->constrained()->cascadeOnDelete();
             $table->uuidMorphs('invoiceable');
             $table->timestamp('registration_date');
             $table->time('start')->nullable();

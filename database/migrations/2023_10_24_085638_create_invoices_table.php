@@ -22,6 +22,7 @@ return new class extends Migration
             $table->boolean('surcharge')->default(false);
             $table->boolean('paid')->default(false);
             $table->string('user_id')->nullable();
+            $table->boolean('active')->default(true);
             $table->timestamps();
         });
     }
