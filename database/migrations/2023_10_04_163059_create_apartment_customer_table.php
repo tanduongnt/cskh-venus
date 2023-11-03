@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('apartment_customer', function (Blueprint $table) {
             $table->foreignUuid('apartment_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('customer_id')->constrained()->cascadeOnDelete();
-            $table->string('role');
+            $table->string('vai_tro');
+            $table->boolean('duoc_uy_quyen');
+            $table->string('nguoi_them');
+            $table->timestamp('ngay_them');
             $table->timestamps();
             $table->unique(['apartment_id', 'customer_id']);
         });

@@ -13,14 +13,11 @@ return new class extends Migration
     {
         Schema::create('buildings', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name');
-            $table->string('address')->nullable();
-            $table->integer('floor')->nullable();
-            $table->integer('apartment')->nullable();
-            $table->integer('area')->nullable();
-            $table->string('investor')->nullable();
-            $table->longText('description')->nullable();
-            $table->integer('sort')->nullable();
+            $table->string('ten_toa_nha');
+            $table->double('phi_quan_ly')->default(0);
+            $table->double('thue_vat')->default(0);
+            $table->double('so_luong_uy_quyen')->default(0);
+            $table->integer('sap_xep')->nullable();
             $table->boolean('active')->default(true);
             $table->timestamps();
         });

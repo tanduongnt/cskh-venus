@@ -41,8 +41,9 @@ class InvoiceablesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('invoiceables')
             ->columns([
-                TextColumn::make('registration_date')->dateTime('d/m/Y')->label('Ngày sử dụng'),
+                TextColumn::make('registration_date')->dateTime('d/m/Y')->label('Thời gian'),
                 TextColumn::make('invoiceable.name')->label('Tên')->description(fn (Invoiceable $record): string => ($record->invoiceable_type == 'App\Models\Utility') ? "Từ {$record->start} đến {$record->end}" : ""),
+                TextColumn::make('quantity')->label('Số lượng'),
                 TextColumn::make('price')->formatStateUsing(function (Invoiceable $record, string $state) {
                     if ($record->invoiceable_type == 'App\Models\Surcharge') {
                         $surcharge = Surcharge::find($record->invoiceable_id);
@@ -52,6 +53,7 @@ class InvoiceablesRelationManager extends RelationManager
                         return "{$state}đ";
                     }
                 })->label('Mức thu'),
+                TextColumn::make('amount')->formatStateUsing(fn (string $state): string => "{$state}đ")->label('Thành tiền'),
             ])
             ->filters([
                 //

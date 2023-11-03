@@ -50,35 +50,32 @@ class BuildingResource extends Resource
         return $form
             ->schema([
                 Section::make()->schema([
-                    TextInput::make('name')
+                    TextInput::make('ten_toa_nha')
                         ->required()
                         ->label('Tên chung cư')
-                        ->columnSpan(3),
-                    TextInput::make('sort')
+                        ->columnSpan(['md' => 3]),
+                    TextInput::make('sap_xep')
                         ->nullable()
                         ->numeric()
                         ->label('Sắp xếp'),
-                    TextInput::make('address')
+                    TextInput::make('phi_quan_ly')
                         ->nullable()
-                        ->label('Địa chỉ')
-                        ->columnSpan(3),
-                    TextInput::make('area')
+                        ->numeric()
+                        ->label('Phí quản lý')
+                        ->helperText('Tính theo mỗi m²'),
+                    TextInput::make('thue_vat')
                         ->nullable()
-                        ->label('Diện tích (m²)'),
-                    TextInput::make('floor')
+                        ->numeric()
+                        ->label('Thuế VAT')
+                        ->helperText('Phần trăm khi xuất hóa đơn VAT'),
+                    TextInput::make('so_luong_uy_quyen')
                         ->nullable()
-                        ->label('Tầng')
-                        ->columnSpan(2),
-                    TextInput::make('apartment')
-                        ->nullable()
-                        ->label('Căn hộ')
-                        ->columnSpan(2),
-                    RichEditor::make('description')
-                        ->nullable()
-                        ->label('Mô tả')
-                        ->columnSpan('full'),
-                    Toggle::make('active')->label('Theo dõi'),
-                ])->columns(4),
+                        ->numeric()
+                        ->label('Ủy quyền tối đa')
+                        ->helperText('Số lượng người được chủ nhà ủy quyền'),
+                    Toggle::make('active')->default(true)->label('Hoạt động'),
+                ])
+                ->columns(['md' => 4]),
             ]);
     }
 
@@ -86,12 +83,13 @@ class BuildingResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('Tên chung cư')->sortable()->searchable(),
+                TextColumn::make('ten_toa_nha')->label('Tên tòa nhà')->sortable()->searchable(),
                 TextColumn::make('apartments_count')->counts('apartments')->label('Căn hộ')->sortable(),
                 TextColumn::make('utilities_count')->counts('utilities')->label('Tiện ích')->sortable(),
                 IconColumn::make('active')->boolean()->label('Vận hành'),
                 //ChildResourceLink::make(UtilityResource::class)->label('Hệ thống'),
             ])
+            ->emptyStateHeading('Chưa có dữ liệu')
             ->filters([
                 //
             ])

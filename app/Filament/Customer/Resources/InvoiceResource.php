@@ -53,6 +53,9 @@ class InvoiceResource extends Resource
                     Select::make('apartment_id')
                         ->relationship(name: 'apartment', titleAttribute: 'name')
                         ->label('Căn hộ'),
+                    Select::make('customer_id')
+                        ->relationship(name: 'customer', titleAttribute: 'name')
+                        ->label('Thành viên'),
                     DateTimePicker::make('date')
                         ->required()
                         ->native(false)
@@ -76,15 +79,19 @@ class InvoiceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->query(Invoice::query()->where('customer_id', Auth::id()))
+            ->query(Invoice::query()->withWhereHas('apartment', function ($query) {
+                $query->whereHas('customers', function ($query) {
+                    $query->where('id', Auth::id());
+                });
+            }))
             ->columns([
-                TextColumn::make('apartment.name')->label('Tên căn hộ'),
-                TextColumn::make('date')->dateTime('d/m/Y H:i:s')->label('Ngày đăng ký'),
-                TextColumn::make('amount')->money('VND')->label('Phí đăng ký'),
-                TextColumn::make('surcharge')->money('VND')->label('Phụ thu'),
+                TextColumn::make('apartment.name')->label('Căn hộ'),
+                TextColumn::make('customer.name')->label('Thành viên'),
+                TextColumn::make('description')->label('Mô tả'),
+                TextColumn::make('date')->dateTime('d/m/Y H:i:s')->label('Thời gian'),
                 TextColumn::make('total_amount')->money('VND')->label('Tổng tiền'),
-                IconColumn::make('paid')->boolean()->label('Thanh toán'),
-                IconColumn::make('active')->boolean()->label('Hoạt động'),
+                IconColumn::make('paid')->boolean()->label('Đã thanh toán'),
+                IconColumn::make('active')->boolean()->label('Trạng thái'),
             ])
             ->filters([
                 //

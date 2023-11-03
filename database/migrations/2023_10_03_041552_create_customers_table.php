@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name');
+            $table->string('ho_va_ten');
             $table->string('email')->unique();
-            $table->string('phone')->unique();
+            $table->string('so_dien_thoai')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

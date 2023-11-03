@@ -14,10 +14,9 @@ return new class extends Migration
         Schema::create('apartments', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('building_id')->constrained();
-            $table->string('name');
-            $table->string('code');
-            $table->longText('description')->nullable();
-            $table->integer('sort')->nullable();
+            $table->string('ma_can_ho');
+            $table->double('dien_tich');
+            $table->integer('sap_xep')->nullable();
             $table->boolean('active')->default(true);
             $table->timestamps();
         });

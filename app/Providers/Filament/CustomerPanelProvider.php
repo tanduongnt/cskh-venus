@@ -56,7 +56,7 @@ class CustomerPanelProvider extends PanelProvider
                     ->url(fn (): string => InvoiceResource::getUrl())
                     ->icon('bi-file-text')
                     ->sort(3)
-                    ->label('Chi tiết đăng ký'),
+                    ->label('Phiếu thu'),
             ])
             ->widgets([
                 Widgets\AccountWidget::class,

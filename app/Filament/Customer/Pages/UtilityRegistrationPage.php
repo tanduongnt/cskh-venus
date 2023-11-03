@@ -52,10 +52,12 @@ class UtilityRegistrationPage extends Page
     public float $totalSurchargeAmount = 0;
     public float $totalBlockAmount = 0;
     public float $remainingTimes = 0;
-    public float $priceNotFixed = 0;
+    public float $amount = 0;
+    public float $quantity = 1;
 
 
     public $selectedSurcharges = [];
+    public $defaultSurcharge = [];
 
     public ?Collection $buildings;
     public ?Collection $apartments;
@@ -69,6 +71,7 @@ class UtilityRegistrationPage extends Page
     public function mount()
     {
         $this->blocks = collect();
+        $this->utilities = collect();
         $this->customer_id = Auth::id();
         $this->registration_date = now()->toDateString();
         $this->buildings = Building::withWhereHas('apartments', function ($query) {
@@ -90,16 +93,16 @@ class UtilityRegistrationPage extends Page
                     });
                 });
             })->get();
-            $this->utilities = $this->utility_types[0]->utilities;
+            if ($this->utility_types->count() > 0) {
+                $this->utilities = $this->utility_types[0]->utilities;
+            }
             if ($this->buildings->count() == 1 && $this->apartments->count() == 1) {
                 $this->step = 2;
             }
-        }
-        if ($this->buildings->count() > 0) {
             $this->form->fill([
                 'customer_id' => $this->customer_id,
-                'building_id' => $this->buildings[0]->id,
-                'apartment_id' => $this->buildings[0]->apartments[0]?->id,
+                'building_id' => $building_id,
+                'apartment_id' => $this->apartments[0]?->id,
                 'registration_date' => $this->registration_date,
             ]);
         } else {
@@ -215,11 +218,6 @@ class UtilityRegistrationPage extends Page
                                 ->searchPrompt('Tìm theo tên tiện ích')
                                 ->label('Tiện ích')
                                 ->live()
-                                ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
-                                    if ($get('utility_id')) {
-                                        return;
-                                    }
-                                })
                         ])
                         ->label('Tiện ích')
                         ->columns(2),
@@ -268,10 +266,15 @@ class UtilityRegistrationPage extends Page
 
     public function resetUtility()
     {
+        $this->totalSurchargeAmount = 0;
+        $this->totalBlockAmount = 0;
+        $this->selectedSurcharges = [];
+        $this->blocks = collect();
         $this->loadUtility();
         $this->loadRemainingTimes();
         $this->generateUtilityBlocks();
         $this->loadSurchargeList();
+        //$this->setDefaultSurcharge();
     }
 
     public function loadUtility()
@@ -302,11 +305,6 @@ class UtilityRegistrationPage extends Page
 
     public function generateUtilityBlocks()
     {
-        $this->totalSurchargeAmount = 0;
-        $this->totalBlockAmount = 0;
-        $this->priceNotFixed = 0;
-        $this->selectedSurcharges = [];
-        $this->blocks = collect();
         if ($this->utility->block) {
             $block_price = $this->utility->price;
             $blockCount = floor(1440 / $this->utility->block);
@@ -358,22 +356,25 @@ class UtilityRegistrationPage extends Page
                 $item['selected'] = $item['default'];
                 return $item;
             });
-            // // lấy danh sách phụ thu mặc định
-            // $defaultSurcharges = $this->surchargeList->filter(function ($value, $key) {
-            //     return $value['default'];
-            // })->pluck('id')->toArray();
-            // // Cộng danh sách được chọn và danh sách mặc định.
-            // $this->selectedSurcharges = array_unique(array_merge($this->selectedSurcharges, $defaultSurcharges));
-            //dd($this->selectedSurcharges, $defaultSurcharges);
-
-            // Lấy danh sách phụ thu được chọn theo id
-            $selectedSurchargeList = $this->surchargeList->whereIn('id', $this->selectedSurcharges);
-            // Tính tổng tiền phụ thu được chọn
-            if ($selectedSurchargeList->count() > 0) {
-                $this->totalSurchargeAmount = $selectedSurchargeList->sum('amount');
-            }
-            //dd($selectedSurchargeList, $this->surchargeList);
+            $this->setDefaultSurcharge();
         }
+    }
+
+    public function setDefaultSurcharge()
+    {
+        // lấy danh sách phụ thu mặc định
+        $defaultSurcharge = $this->surchargeList->filter(function ($value, $key) {
+            return $value['default'];
+        })->pluck('id')->toArray();
+        //dd($this->surchargeList);
+        $this->selectedSurcharges = array_unique(array_merge($this->selectedSurcharges, $defaultSurcharge));
+        // Lấy danh sách phụ thu được chọn theo id
+        $selectedSurchargeList = $this->surchargeList->whereIn('id', $this->selectedSurcharges);
+        // Tính tổng tiền phụ thu được chọn
+        if ($selectedSurchargeList->count() > 0) {
+            $this->totalSurchargeAmount = $selectedSurchargeList->sum('amount');
+        }
+        //dd($this->selectedSurcharges);
     }
 
     public function selectBlock($index)
@@ -409,56 +410,69 @@ class UtilityRegistrationPage extends Page
 
     public function store()
     {
-        $invoiceables = collect();
-        $selectedBlocks = $this->blocks->filter(function ($value, $key) {
-            return $value['selected'];
-        });
-        foreach ($selectedBlocks as $key => $block) {
-            $start = $block['start'];
-            $end = $block['end'];
-            $registedInvoiceable = $this->countBlockRegisted($start, $end);
-            if ($registedInvoiceable > 0) {
-                $this->generateUtilityBlocks();
-                Notification::make()->title('Đã có người đăng ký thời gian này')->danger()->send();
-                break;
-            } else {
-                $invoiceables->push([
-                    'registration_date' => $this->registration_date,
-                    'start' => $start,
-                    'end' => $end,
-                    'price' => $block['price'],
-                ]);
-            }
-        }
-        if ($this->remainingTimes > 0 || $this->utility->max_times == 0) {
-            $invoice = Invoice::create([
-                'customer_id' => $this->customer_id,
-                'apartment_id' => $this->apartment_id,
-                'date'  => now(),
-                'surcharge' => $this->totalSurchargeAmount,
-                'amount'   => $this->totalBlockAmount,
-                'total_amount'   => $this->totalSurchargeAmount + $this->totalBlockAmount,
-                'paid'      => false,
-            ]);
-            $invoiceables->transform(function ($item, $key) use ($invoice) {
-                $item['invoice_id'] = $invoice->id;
-                return $item;
+        if (($this->remainingTimes > 0 || $this->utility->max_times == 0)) {
+            $this->loadSurchargeList();
+            //dd($this->surchargeList);
+            $invoiceables = collect();
+            $selectedBlocks = $this->blocks->filter(function ($value, $key) {
+                return $value['selected'];
             });
-            $this->utility->invoiceable()->createMany($invoiceables);
-            foreach ($this->surchargeList as $key => $surcharge) {
-                $surcharge->invoiceable()->create([
-                    'invoice_id' => $invoice->id,
-                    'registration_date' => $this->registration_date,
-                    'price' => $surcharge['price'],
-                ]);
+            //dd($selectedBlocks);
+            if ($selectedBlocks && $selectedBlocks->count() > 0) {
+                foreach ($selectedBlocks as $key => $block) {
+                    $start = $block['start'];
+                    $end = $block['end'];
+                    $registedInvoiceable = $this->countBlockRegisted($start, $end);
+                    if ($registedInvoiceable > 0) {
+                        $this->resetUtility();
+                        Notification::make()->title('Đã có người đăng ký thời gian này')->danger()->send();
+                        break;
+                    } else {
+                        $invoiceables->push([
+                            'registration_date' => $this->registration_date,
+                            'start' => $start,
+                            'end' => $end,
+                            'price' => $block['price'],
+                            'amount' => $block['price'],
+                        ]);
+                    }
+                }
+                if ($invoiceables && $invoiceables->count() > 0) {
+                    $invoice = Invoice::create([
+                        'customer_id' => $this->customer_id,
+                        'apartment_id' => $this->apartment_id,
+                        'date'  => now(),
+                        'description' => ucfirst(strtolower("Đăng ký tiện ích {$this->utility->utilityType->name} ({$this->utility->name})")),
+                        'surcharge' => $this->totalSurchargeAmount,
+                        'amount'   => $this->totalBlockAmount,
+                        'total_amount'   => $this->totalSurchargeAmount + $this->totalBlockAmount,
+                        'paid'      => false,
+                    ]);
+                    $invoiceables->transform(function ($item, $key) use ($invoice) {
+                        $item['invoice_id'] = $invoice->id;
+                        return $item;
+                    });
+                    $this->utility->invoiceable()->createMany($invoiceables);
+                    foreach ($this->surchargeList as $key => $surcharge) {
+                        $surcharge->invoiceable()->create([
+                            'invoice_id' => $invoice->id,
+                            'registration_date' => $this->registration_date,
+                            'quantity' => $surcharge['quantity'],
+                            'price' => $surcharge['price'],
+                            'amount' => $surcharge['amount'],
+                        ]);
+                    }
+                    $this->resetUtility();
+                    Notification::make()
+                        ->title('Đăng kí thành công')
+                        ->success()
+                        ->send();
+                }
+            } else {
+                Notification::make()->title('Chọn thời gian')->danger()->send();
             }
-            $this->resetUtility();
-            Notification::make()
-                ->title('Đăng kí thành công')
-                ->success()
-                ->send();
         } else {
-            $this->generateUtilityBlocks();
+            $this->resetUtility();
             Notification::make()->title('Đã hết lượt đăng ký')->danger()->send();
         }
     }

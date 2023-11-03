@@ -41,7 +41,7 @@
             @endif
         </div>
 
-        @if ($surchargeList && $surchargeList->count() > 0)
+        @if ($utility_id && $surchargeList && $surchargeList->count() > 0)
             <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
                 <table class="min-w-full divide-y divide-gray-300">
                     <thead class="bg-gray-50">
@@ -56,20 +56,16 @@
                         @foreach ($surchargeList->sortByDesc('default') as $surcharge)
                             <tr>
                                 <td class="relative w-12 px-6 sm:w-16 sm:px-8">
-                                    <input type="checkbox" wire:model.live="selectedSurcharges" value="{{ $surcharge->id }}"
-                                    @class([
+                                    <input type="checkbox" wire:key="{{ $surcharge->id }}" wire:model.live="selectedSurcharges" value="{{ $surcharge->id }}" @class([
                                         'absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6',
                                         'text-indigo-600' => !$surcharge->default,
                                         'text-gray-300' => $surcharge->default,
                                     ]) {{ $surcharge->default ? 'disabled' : '' }}>
                                 </td>
-                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->name }}</td>
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->name }} - {{ $surcharge->id }}</td>
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ number_format($surcharge->price) }}{{ $surcharge->fixed ? 'đ' : '%' }}</td>
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ number_format($surcharge->amount) }}đ</td>
                             </tr>
-                        @endforeach
-                        @foreach ($selectedSurcharges as $selectedSurcharge)
-                            {{$selectedSurcharge}} <br>
                         @endforeach
                     </tbody>
                 </table>
@@ -83,7 +79,7 @@
                     <div class="text-left">
                         @if ($this->utility->max_times > 0)
                             Số lần đăng ký còn lại trong tháng <span class='text-sky-700 text-lg'>{{ $remainingTimes }}</span>
-                        <br>
+                            <br>
                         @endif
                         Phí đăng ký: <span class="text-sky-700">{{ number_format($totalBlockAmount) }}đ</span>
                         <br>
@@ -93,12 +89,13 @@
                     </div>
                 </div>
             </div>
+
+            <div>
+                <x-filament::button class="mt-2" type="submit">
+                    Hoàn tất
+                </x-filament::button>
+            </div>
         @endif
-        <div>
-            <x-filament::button class="mt-2" type="submit">
-                Hoàn tất
-            </x-filament::button>
-        </div>
     </form>
 
 
