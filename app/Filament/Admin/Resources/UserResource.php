@@ -5,9 +5,11 @@ namespace App\Filament\Admin\Resources;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
+use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\IconColumn;
@@ -50,10 +52,16 @@ class UserResource extends Resource
                         ->columnSpan('full'),
                     TextInput::make('email')
                         ->required()
-                        ->label('Email')
-                        ->columnSpan('full'),
-                    Toggle::make('active')->label('Theo dõi'),
-                ])->columns(2),
+                        ->live()
+                        ->afterStateUpdated(function (Set $set, $state) {
+                            $set('password', bcrypt('12345678'));
+                        })
+                        ->label('Email'),
+                    Hidden::make('password'),
+                    Toggle::make('active')
+                        ->default(true)
+                        ->label('Theo dõi'),
+                ])->columns(1),
             ]);
     }
 

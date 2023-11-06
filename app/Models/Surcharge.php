@@ -14,14 +14,18 @@ class Surcharge extends Model
 
     protected $fillable = [
         'utility_id',
-        'name',
-        'price',
-        'fixed',
+        'ten_phu_thu',
+        'muc_thu',
+        'mac_dinh',
+        'co_dinh',
+        'thu_theo_block'
     ];
 
 
     protected $casts = [
-        'fixed' => 'boolean',
+        'co_dinh' => 'boolean',
+        'mac_dinh' => 'boolean',
+        'thu_theo_block' => 'boolean',
     ];
 
     public function invoiceable()

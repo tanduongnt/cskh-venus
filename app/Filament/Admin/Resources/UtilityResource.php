@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Utility;
+use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -28,7 +29,7 @@ class UtilityResource extends NestedResource
 {
     protected static ?string $model = Utility::class;
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'ten_tien_ich';
 
     protected static ?string $slug = 'utilities';
 
@@ -59,74 +60,75 @@ class UtilityResource extends NestedResource
                 Section::make()->schema([
                     Hidden::make('building_id'),
                     Select::make('utility_type_id')
-                        ->relationship(name: 'utilityType', titleAttribute: 'name')
+                        ->relationship(name: 'utilityType', titleAttribute: 'ten_loai_tien_ich')
                         ->required()
                         ->label('Loại tiện ích')
-                        ->columnSpan('full')
+                        ->columnSpan(['md' => 'full'])
                         ->native(false),
-                    TextInput::make('name')
+                    TextInput::make('ten_tien_ich')
                         ->required()
                         ->label('Tên tiện ích')
-                        ->columnSpan(2),
-                    TextInput::make('sort')
+                        ->columnSpan(['md' => 2]),
+                    TextInput::make('sap_xep')
                         ->nullable()
                         ->numeric()
                         ->label('Sắp xếp'),
-                    Toggle::make('registrable')
+                    Toggle::make('cho_phep_dang_ky')
                         ->default(true)
                         ->label('Đăng ký để sử dụng')
+                        ->live()
                         ->columnSpan('full'),
-                    TimePicker::make('start_time')
-                        ->default('00:00')
-                        ->required()
-                        ->native(false)
-                        ->seconds(false)
-                        ->minutesStep(30)
-                        ->displayFormat('H:i')
-                        ->label('Bắt đầu'),
-                    TimePicker::make('end_time')
-                        ->after('start_time')
-                        ->default('23:59')
-                        ->required()
-                        ->seconds(false)
-                        ->minutesStep(30)
-                        ->native(false)
-                        ->displayFormat('H:i')
-                        ->label('Kết thúc'),
-                    TextInput::make('block')
-                        ->numeric()
-                        ->label('Thời gian mỗi block (phút)'),
-                    TimePicker::make('charge_start_time')
-                        ->afterOrEqual('start_time')
-                        ->native(false)
-                        ->seconds(false)
-                        ->minutesStep(30)
-                        ->displayFormat('H:i')
-                        ->label('Bắt đầu tính tiền'),
-                    TimePicker::make('charge_end_time')
-                        ->beforeOrEqual('end_time')
-                        ->after('charge_start_time')
-                        ->native(false)
-                        ->seconds(false)
-                        ->minutesStep(30)
-                        ->displayFormat('H:i')
-                        ->label('Kết thúc tính tiền'),
-                    TextInput::make('price')
-                        ->numeric()
-                        ->default(0)
-                        ->label('Giá tiền mỗi block'),
-                    TextInput::make('max_times')
-                        ->numeric()
-                        ->label('Giới hạn mỗi tháng')
-                        ->helperText('Nếu không giới hạn thì bằng 0'),
-                    RichEditor::make('description')
+                    Section::make()->schema([
+                        TimePicker::make('gio_bat_dau')
+                            ->default('00:00')
+                            ->required()
+                            ->native(false)
+                            ->seconds(false)
+                            ->minutesStep(30)
+                            ->displayFormat('H:i')
+                            ->label('Bắt đầu'),
+                        TimePicker::make('gio_ket_thuc')
+                            ->after('gio_bat_dau')
+                            ->default('23:59')
+                            ->required()
+                            ->seconds(false)
+                            ->native(false)
+                            ->displayFormat('H:i')
+                            ->label('Kết thúc'),
+                        TextInput::make('block')
+                            ->numeric()
+                            ->default(60)
+                            ->label('Thời gian mỗi block (phút)'),
+                        TimePicker::make('gio_bat_dau_tinh_tien')
+                            ->afterOrEqual('gio_bat_dau')
+                            ->native(false)
+                            ->seconds(false)
+                            ->minutesStep(30)
+                            ->displayFormat('H:i')
+                            ->label('Bắt đầu tính tiền'),
+                        TimePicker::make('gio_ket_thuc_tinh_tien')
+                            ->beforeOrEqual('gio_ket_thuc')
+                            ->after('gio_bat_dau_tinh_tien')
+                            ->native(false)
+                            ->seconds(false)
+                            ->minutesStep(30)
+                            ->displayFormat('H:i')
+                            ->label('Kết thúc tính tiền'),
+                        TextInput::make('don_gia')
+                            ->numeric()
+                            ->default(0)
+                            ->label('Giá tiền mỗi block'),
+                    ])
+                        ->hidden(fn (Get $get): bool => !$get('cho_phep_dang_ky'))
+                        ->columns(['md' => 3]),
+                    RichEditor::make('mo_ta')
                         ->nullable()
                         ->label('Mô tả')
-                        ->columnSpan('full'),
+                        ->columnSpan(['md' => 'full']),
                     Toggle::make('active')
                         ->default(true)
                         ->label('Theo dõi'),
-                ])->columns(3),
+                ])->columns(['md' => 3]),
             ]);
     }
 
@@ -134,9 +136,9 @@ class UtilityResource extends NestedResource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('Tên tiện ích')->sortable()->searchable(),
-                TextColumn::make('start_time')->label('Giờ hoạt động')->sortable(),
-                TextColumn::make('end_time')->label('Giờ kết thúc')->sortable(),
+                TextColumn::make('ten_tien_ich')->label('Tên tiện ích')->sortable()->searchable(),
+                TextColumn::make('gio_bat_dau')->label('Giờ bắt đầu')->sortable(),
+                TextColumn::make('gio_ket_thuc')->label('Giờ kết thúc')->sortable(),
                 IconColumn::make('active')->boolean()->label('hoạt động'),
             ])
             ->filters([

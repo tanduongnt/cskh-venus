@@ -28,13 +28,13 @@ class CustomersRelationManager extends RelationManager
             ->schema([
                 Select::make('customer_id')
                     ->getSearchResultsUsing(function (string $search) {
-                        return Customer::where('name', 'LIKE', "%{$search}%")->limit(10)->pluck('name', 'id');
+                        return Customer::where('ho_va_ten', 'LIKE', "%{$search}%")->limit(10)->pluck('ho_va_ten', 'id');
                     })
-                    ->getOptionLabelUsing(fn ($value): ?string => Customer::find($value)?->name)
+                    ->getOptionLabelUsing(fn ($value): ?string => Customer::find($value)?->ho_va_ten)
                     ->required()
                     ->label('Tên')
                     ->searchable(),
-                Select::make('role')
+                Select::make('vai_tro')
                     ->options(ApartmentCustomerRole::class)
                     ->required()
                     ->label('vai trò')
@@ -45,10 +45,10 @@ class CustomersRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('name')
+            ->recordTitleAttribute('ho_va_ten')
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Tên'),
-                Tables\Columns\TextColumn::make('role')->formatStateUsing(fn (string $state): string => __($state))->label('Vai trò'),
+                Tables\Columns\TextColumn::make('ho_va_ten')->label('Tên'),
+                Tables\Columns\TextColumn::make('vai_tro')->formatStateUsing(fn (string $state): string => __($state))->label('Vai trò'),
             ])
             ->filters([
                 //

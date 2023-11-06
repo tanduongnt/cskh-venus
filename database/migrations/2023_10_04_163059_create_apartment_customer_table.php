@@ -15,9 +15,9 @@ return new class extends Migration
             $table->foreignUuid('apartment_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('customer_id')->constrained()->cascadeOnDelete();
             $table->string('vai_tro');
-            $table->boolean('duoc_uy_quyen');
-            $table->string('nguoi_them');
-            $table->timestamp('ngay_them');
+            $table->boolean('duoc_uy_quyen')->nullable();
+            $table->string('nguoi_them')->nullable();
+            $table->timestamp('ngay_them')->nullable();
             $table->timestamps();
             $table->unique(['apartment_id', 'customer_id']);
         });

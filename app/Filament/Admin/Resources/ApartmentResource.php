@@ -5,11 +5,13 @@ namespace App\Filament\Admin\Resources;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Models\Apartment;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Illuminate\Support\Collection;
 use App\Enums\ApartmentCustomerRole;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Hidden;
@@ -33,7 +35,7 @@ class ApartmentResource extends NestedResource
 {
     protected static ?string $model = Apartment::class;
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'ma_can_ho';
 
     protected static ?string $slug = 'apartments';
 
@@ -60,27 +62,26 @@ class ApartmentResource extends NestedResource
             ->schema([
                 Section::make()->schema([
                     Hidden::make('building_id'),
-                    TextInput::make('code')
+                    TextInput::make('ma_can_ho')
                         ->required()
                         ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
                             $building_id = $get('building_id');
                             return $rule->where('building_id', $building_id);
                         }, ignoreRecord: true)
                         ->label('Mã căn hộ'),
-                    TextInput::make('name')
-                        ->required()
-                        ->label('Tên căn hộ')
-                        ->columnSpan(2),
-                    TextInput::make('sort')
+                    TextInput::make('sap_xep')
                         ->nullable()
                         ->numeric()
                         ->label('Sắp xếp'),
-                    RichEditor::make('description')
+                    TextInput::make('dien_tich')
                         ->nullable()
-                        ->label('Mô tả')
+                        ->numeric()
+                        ->label('Diện tích m²'),
+                    Toggle::make('active')
+                        ->default(true)
+                        ->label('Theo dõi')
                         ->columnSpan('full'),
-                    Toggle::make('active')->label('Theo dõi'),
-                ])->columns(4),
+                ])->columns(['md' => 3]),
             ]);
     }
 
@@ -88,9 +89,9 @@ class ApartmentResource extends NestedResource
     {
         return $table
             ->columns([
-                TextColumn::make('code')->label('Mã căn hộ')->sortable()->searchable(),
-                TextColumn::make('name')->label('Tên căn hộ')->sortable()->searchable(),
-                TextColumn::make('owners.name')->label('Chủ hộ')->sortable(),
+                TextColumn::make('ma_can_ho')->label('Mã căn hộ')->sortable()->searchable(),
+                TextColumn::make('dien_tich')->label('Diện tích')->sortable()->searchable(),
+                TextColumn::make('owners.ho_va_ten')->label('Chủ hộ')->sortable(),
                 TextColumn::make('customers_count')->counts('customers')->label('Nhân khẩu')->sortable(),
                 IconColumn::make('active')->boolean()->label('Hoạt động'),
             ])

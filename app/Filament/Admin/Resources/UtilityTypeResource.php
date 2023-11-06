@@ -27,7 +27,7 @@ class UtilityTypeResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'ten_loai_tien_ich';
 
 
     public static function shouldRegisterNavigation(): bool
@@ -45,19 +45,19 @@ class UtilityTypeResource extends Resource
         return $form
             ->schema([
                 Section::make()->schema([
-                    TextInput::make('name')
+                    TextInput::make('ten_loai_tien_ich')
                         ->required()
-                        ->label('Tên tiện ích')
-                        ->columnSpan(3),
-                    TextInput::make('sort')
+                        ->label('Tên loại tiện ích')
+                        ->columnSpan(['md' => 3]),
+                    TextInput::make('sap_xep')
                         ->nullable()
                         ->numeric()
                         ->label('Sắp xếp'),
-                    RichEditor::make('description')
+                    RichEditor::make('mo_ta')
                         ->nullable()
                         ->label('Mô tả')
                         ->columnSpan('full'),
-                ])->columns(4),
+                ])->columns(['md' => 4]),
             ]);
     }
 
@@ -65,9 +65,9 @@ class UtilityTypeResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('Loại tiện ích')->sortable()->searchable(),
-                TextColumn::make('description')->label('Mô tả')->sortable(),
-                TextColumn::make('sort')->label('Sắp xếp')->sortable(),
+                TextColumn::make('ten_loai_tien_ich')->label('Loại tiện ích')->sortable()->searchable(),
+                TextColumn::make('mo_ta')->label('Mô tả')->sortable(),
+                TextColumn::make('sap_xep')->label('Sắp xếp')->sortable(),
             ])
             ->filters([
                 //

@@ -17,9 +17,9 @@ class Apartment extends Model
 
     protected $fillable = [
         'building_id',
-        'name',
-        'description',
-        'sort',
+        'ma_can_ho',
+        'dien_tich',
+        'sap_xep',
         'active',
     ];
 
@@ -34,16 +34,16 @@ class Apartment extends Model
 
     public function customers(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class)->withPivot(['role', 'customer_id']);
+        return $this->belongsToMany(Customer::class)->withPivot(['vai_tro', 'customer_id']);
     }
 
     public function owners(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class)->withPivot(['role'])->wherePivot('role', ApartmentCustomerRole::OWNER);
+        return $this->belongsToMany(Customer::class)->withPivot(['vai_tro'])->wherePivot('vai_tro', ApartmentCustomerRole::OWNER);
     }
 
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class)->withPivot(['role'])->wherePivot('role', ApartmentCustomerRole::MEMBER);
+        return $this->belongsToMany(Customer::class)->withPivot(['vai_tro'])->wherePivot('vai_tro', ApartmentCustomerRole::MEMBER);
     }
 }

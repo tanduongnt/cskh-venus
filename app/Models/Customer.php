@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Laravel\Passport\HasApiTokens;
 use App\Enums\ApartmentCustomerRole;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -19,7 +21,7 @@ class Customer extends Authenticatable
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
     protected $fillable = [
-        'name',
+        'ho_va_ten',
         'email',
         'phone',
         'password',
@@ -32,7 +34,6 @@ class Customer extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
     ];
 
     public function apartments(): BelongsToMany
@@ -42,12 +43,12 @@ class Customer extends Authenticatable
 
     public function owns(): BelongsToMany
     {
-        return $this->belongsToMany(Apartment::class)->withPivot(['role'])->wherePivot('role', ApartmentCustomerRole::OWNER);
+        return $this->belongsToMany(Apartment::class)->withPivot(['vai_tro'])->wherePivot('vai_tro', ApartmentCustomerRole::OWNER);
     }
 
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(Apartment::class)->withPivot(['role'])->wherePivot('role', ApartmentCustomerRole::MEMBER);
+        return $this->belongsToMany(Apartment::class)->withPivot(['vai_tro'])->wherePivot('vai_tro', ApartmentCustomerRole::MEMBER);
     }
 
     public function buildings()

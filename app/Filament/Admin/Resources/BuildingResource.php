@@ -28,7 +28,7 @@ class BuildingResource extends Resource
 {
     protected static ?string $model = Building::class;
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'ten_toa_nha';
 
     protected static ?string $slug = 'buildings';
 
@@ -53,7 +53,7 @@ class BuildingResource extends Resource
                     TextInput::make('ten_toa_nha')
                         ->required()
                         ->label('Tên chung cư')
-                        ->columnSpan(['md' => 3]),
+                        ->columnSpan(['md' => 2]),
                     TextInput::make('sap_xep')
                         ->nullable()
                         ->numeric()
@@ -73,9 +73,12 @@ class BuildingResource extends Resource
                         ->numeric()
                         ->label('Ủy quyền tối đa')
                         ->helperText('Số lượng người được chủ nhà ủy quyền'),
-                    Toggle::make('active')->default(true)->label('Hoạt động'),
+                    Toggle::make('active')
+                        ->default(true)
+                        ->label('Hoạt động')
+                        ->columnSpan('full'),
                 ])
-                ->columns(['md' => 4]),
+                    ->columns(['md' => 3]),
             ]);
     }
 

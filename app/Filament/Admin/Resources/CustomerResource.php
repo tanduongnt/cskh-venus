@@ -4,10 +4,15 @@ namespace App\Filament\Admin\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
+use Filament\Forms\Set;
+use App\Models\Building;
 use App\Models\Customer;
 use Filament\Forms\Form;
+use Filament\Pages\Page;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Hash;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\IconColumn;
@@ -15,10 +20,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\CustomerResource\Pages;
 use App\Filament\Admin\Resources\CustomerResource\RelationManagers;
-use App\Models\Building;
 
 class CustomerResource extends Resource
 {
@@ -29,7 +34,7 @@ class CustomerResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'ho_va_ten';
 
 
     public static function shouldRegisterNavigation(): bool
@@ -47,19 +52,24 @@ class CustomerResource extends Resource
         return $form
             ->schema([
                 Section::make()->schema([
-                    TextInput::make('name')
+                    TextInput::make('ho_va_ten')
                         ->required()
-                        ->label('Tên')
-                        ->columnSpan('full'),
+                        ->label('Tên'),
                     TextInput::make('email')
                         ->required()
-                        ->label('Email')
-                        ->columnSpan('full'),
-                    TextInput::make('phone')
+                        ->live()
+                        ->afterStateUpdated(function (Set $set, $state) {
+                            $set('password', bcrypt('12345678'));
+                        })
+                        ->label('Email'),
+                    Hidden::make('password'),
+                    TextInput::make('so_dien_thoai')
                         ->required()
                         ->label('Điện thoại'),
-                    Toggle::make('active')->label('Theo dõi'),
-                ])->columns(2),
+                    Toggle::make('active')
+                        ->default(true)
+                        ->label('Theo dõi'),
+                ])->columns(1),
             ]);
     }
 
@@ -67,10 +77,10 @@ class CustomerResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('Tên khách hàng')->sortable()->searchable(),
+                TextColumn::make('ho_va_ten')->label('Tên khách hàng')->sortable(),
                 TextColumn::make('email')->label('Email')->sortable(),
-                TextColumn::make('apartments.building.name')->label('Chung cư')->sortable(),
-                TextColumn::make('phone')->label('Điện thoại')->sortable(),
+                TextColumn::make('buildings.ten_toa_nha')->label('Chung cư')->hidden(),
+                TextColumn::make('so_dien_thoai')->label('Số điện thoại')->sortable(),
                 IconColumn::make('email_verified_at')->boolean()->label('Xác thực'),
                 IconColumn::make('active')->boolean()->label('Hoạt động'),
             ])
@@ -84,9 +94,9 @@ class CustomerResource extends Resource
                         }
                     })
                     ->getSearchResultsUsing(function (string $search) {
-                        return Building::where('name', 'LIKE', "%{$search}%")->limit(10)->pluck('name', 'id');
+                        return Building::where('ten_toa_nha', 'LIKE', "%{$search}%")->limit(10)->pluck('ten_toa_nha', 'id');
                     })
-                    ->getOptionLabelUsing(fn ($value): ?string => Building::find($value)?->name)
+                    ->getOptionLabelUsing(fn ($value): ?string => Building::find($value)?->ten_toa_nha)
                     ->searchable(),
             ])
             ->actions([
@@ -112,7 +122,7 @@ class CustomerResource extends Resource
         return [
             'index' => Pages\ListCustomers::route('/'),
             'create' => Pages\CreateCustomer::route('/create'),
-            'edit' => Pages\ViewCustomer::route('/{record}'),
+            'view' => Pages\ViewCustomer::route('/{record}'),
             'edit' => Pages\EditCustomer::route('/{record}/edit'),
         ];
     }
