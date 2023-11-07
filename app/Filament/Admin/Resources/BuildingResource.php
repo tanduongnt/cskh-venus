@@ -18,6 +18,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Forms\Components\RichEditor;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Enums\ActionsPosition;
 use App\Filament\Admin\Resources\UtilityResource;
 use App\Extend\Filament\Columns\ChildResourceLink;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -112,12 +113,13 @@ class BuildingResource extends Resource
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
                 ]),
-            ])
+            ], position: ActionsPosition::BeforeColumns)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ])->label('Tác vụ'),
+                    //Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

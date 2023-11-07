@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "althinect/filament-spatie-roles-permissions": "^2.2",
         "davidhsianturi/blade-bootstrap-icons": "^1.4",
         "filament/filament": "^3.0",
         "filament/forms": "^3.0",
@@ -33,6 +34,9 @@
         "spatie/laravel-ignition": "^2.0"
     },
     "autoload": {
+        "files": [
+            "app/functions.php"
+        ],
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",

@@ -9,7 +9,9 @@ use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\IconColumn;
@@ -78,8 +80,15 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
+                Action::make('permissions')
+                    ->url(fn (User $record): string => route('filament.admin.resources.users.permissions', $record))
+                    ->openUrlInNewTab()
+                    ->label('Quyền')
+                    ->icon('heroicon-s-lock-closed')
+                    ->color('success'),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -102,6 +111,7 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'view' => Pages\ViewUser::route('/{record}'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
+            'permissions' => Pages\Permission::route('/{record}/permissions'),
         ];
     }
 }

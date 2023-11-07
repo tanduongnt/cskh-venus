@@ -4,21 +4,25 @@ namespace App\Providers\Filament;
 
 use Filament\Pages;
 use Filament\Panel;
+use App\Models\User;
 use Filament\Widgets;
 use App\Models\Building;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use App\Filament\Admin\Pages\Customer;
 use App\Filament\Admin\Pages\Dashboard;
 use Filament\Navigation\NavigationItem;
 use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Navigation\NavigationBuilder;
+use App\Filament\Admin\Resources\UserResource;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use App\Filament\Admin\Pages\RegistrationUtility;
 use App\Filament\Admin\Resources\BuildingResource;
 use App\Filament\Admin\Resources\CustomerResource;
-use App\Filament\Admin\Resources\UserResource;
 use App\Filament\Admin\Resources\UtilityTypeResource;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
@@ -56,11 +60,17 @@ class AdminPanelProvider extends PanelProvider
                 NavigationItem::make('buildings')
                     ->url(fn (): string => BuildingResource::getUrl())
                     ->icon('heroicon-o-building-office-2')
-                    ->label('Chung cư'),
+                    ->label('Chung cư')
+                    ->hidden(fn (): bool => !can('building.view')),
                 NavigationItem::make('customer')
                     ->url(fn (): string => CustomerResource::getUrl())
                     ->icon('bi-people-fill')
                     ->label('Khách hàng'),
+                NavigationItem::make('Utility')
+                    ->url(fn (): string => RegistrationUtility::getUrl())
+                    ->icon('bi-file-text')
+                    ->sort(3)
+                    ->label('Đăng ký tiện ích'),
                 //Cài đặt
                 NavigationItem::make('utilityTypes')
                     ->group('Cài đặt')
@@ -88,5 +98,12 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    public function boot()
+    {
+        Gate::before(function (User $user, string $ability) {
+            return $user->isSuperAdmin() ? true : null;
+        });
     }
 }

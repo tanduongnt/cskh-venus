@@ -201,16 +201,16 @@ trait NestedPage
         }
     }
 
-    protected function configureDeleteAction(DeleteAction | Tables\Actions\DeleteAction $action): void
-    {
-        $resource = static::getResource();
+    // protected function configureDeleteAction(DeleteAction | Tables\Actions\DeleteAction $action): void
+    // {
+    //     $resource = static::getResource();
 
-        $action
-            ->authorize($resource::canDelete($this->getRecord()))
-            ->record($this->getRecord())
-            ->recordTitle($this->getRecordTitle())
-            ->successRedirectUrl($resource::getUrl('index', $this->urlParameters));
-    }
+    //     $action
+    //         ->authorize($resource::canDelete($this->getRecord()))
+    //         ->record($this->getRecord())
+    //         ->recordTitle($this->getRecordTitle())
+    //         ->successRedirectUrl($resource::getUrl('index', $this->urlParameters));
+    // }
 
     protected function configureViewAction(ViewAction | Tables\Actions\ViewAction $action): void
     {
