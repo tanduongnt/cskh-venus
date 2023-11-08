@@ -21,6 +21,7 @@ use App\Filament\Admin\Resources\UserResource;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Admin\Pages\RegistrationUtility;
+use App\Filament\Admin\Pages\UtilityRegistrationPage;
 use App\Filament\Admin\Resources\BuildingResource;
 use App\Filament\Admin\Resources\CustomerResource;
 use App\Filament\Admin\Resources\UtilityTypeResource;
@@ -62,26 +63,29 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-building-office-2')
                     ->label('Chung cư')
                     ->hidden(fn (): bool => !can('building.view')),
-                NavigationItem::make('customer')
+                NavigationItem::make('customers')
                     ->url(fn (): string => CustomerResource::getUrl())
                     ->icon('bi-people-fill')
-                    ->label('Khách hàng'),
-                NavigationItem::make('Utility')
-                    ->url(fn (): string => RegistrationUtility::getUrl())
+                    ->label('Khách hàng')
+                    ->hidden(fn (): bool => !can('customer.view')),
+                NavigationItem::make('utility-register')
+                    ->url(fn (): string => UtilityRegistrationPage::getUrl())
                     ->icon('bi-file-text')
                     ->sort(3)
                     ->label('Đăng ký tiện ích'),
                 //Cài đặt
-                NavigationItem::make('utilityTypes')
+                NavigationItem::make('utility_types')
                     ->group('Cài đặt')
                     ->url(fn (): string => UtilityTypeResource::getUrl())
                     ->icon('heroicon-o-presentation-chart-line')
-                    ->label('Loại tiện ích'),
+                    ->label('Loại tiện ích')
+                    ->hidden(fn (): bool => !can('utility_type.view')),
                 NavigationItem::make('users')
                     ->group('Cài đặt')
                     ->url(fn (): string => UserResource::getUrl())
                     ->icon('bi-person-circle')
-                    ->label('Nhân viên'),
+                    ->label('Nhân viên')
+                    ->hidden(fn (): bool => !can('users.view')),
             ])
             ->widgets([])
             ->middleware([

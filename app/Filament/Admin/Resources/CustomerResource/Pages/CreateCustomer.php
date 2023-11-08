@@ -10,10 +10,6 @@ class CreateCustomer extends CreateRecord
 {
     protected static string $resource = CustomerResource::class;
 
-    protected static ?string $title = 'Thêm mới';
-
-    protected static ?string $breadcrumb = 'Thêm mới';
-
     protected function getRedirectUrl(): string
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');

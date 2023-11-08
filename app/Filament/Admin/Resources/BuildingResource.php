@@ -111,9 +111,9 @@ class BuildingResource extends Resource
                     ->icon('bi-columns-gap')
                     ->color('info'),
                 ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ViewAction::make()->hidden(fn (): bool => !can('building.view')),
+                    Tables\Actions\EditAction::make()->hidden(fn (): bool => !can('building.edit')),
+                    Tables\Actions\DeleteAction::make()->hidden(fn (): bool => !can('building.delete')),
                 ]),
             ], position: ActionsPosition::BeforeColumns)
             ->bulkActions([

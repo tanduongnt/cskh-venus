@@ -10,10 +10,6 @@ class ViewUtilityType extends ViewRecord
 {
     protected static string $resource = UtilityTypeResource::class;
 
-    protected static ?string $title = 'Chi tiết';
-
-    protected static ?string $breadcrumb = 'Chi tiết';
-
     protected function getHeaderActions(): array
     {
         return [

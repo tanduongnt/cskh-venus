@@ -100,9 +100,9 @@ class CustomerResource extends Resource
                     ->searchable(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()->hidden(fn (): bool => !can('customer.view')),
+                Tables\Actions\EditAction::make()->hidden(fn (): bool => !can('customer.edit')),
+                Tables\Actions\DeleteAction::make()->hidden(fn (): bool => !can('customer.delete')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

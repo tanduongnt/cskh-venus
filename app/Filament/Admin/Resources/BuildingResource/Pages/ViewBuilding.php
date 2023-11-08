@@ -10,10 +10,6 @@ class ViewBuilding extends ViewRecord
 {
     protected static string $resource = BuildingResource::class;
 
-    protected static ?string $title = 'Chi tiết';
-
-    protected static ?string $breadcrumb = 'Chi tiết';
-
     protected function getHeaderActions(): array
     {
         return [

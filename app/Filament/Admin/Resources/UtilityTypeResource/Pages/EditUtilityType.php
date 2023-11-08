@@ -10,10 +10,6 @@ class EditUtilityType extends EditRecord
 {
     protected static string $resource = UtilityTypeResource::class;
 
-    protected static ?string $title = 'Cập nhật';
-
-    protected static ?string $breadcrumb = 'Cập nhật';
-
     protected function getHeaderActions(): array
     {
         return [

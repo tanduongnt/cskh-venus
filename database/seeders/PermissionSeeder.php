@@ -22,6 +22,7 @@ class PermissionSeeder extends Seeder
         Permission::updateOrCreate(['name' => 'user.create'], ['display_name' => 'Tạo mới', 'description' => 'Thêm mới nhân viên']);
         Permission::updateOrCreate(['name' => 'user.edit'], ['display_name' => 'Chỉnh sửa', 'description' => 'Chỉnh sửa thông tin nhân viên']);
         Permission::updateOrCreate(['name' => 'user.delete'], ['display_name' => 'Xóa', 'description' => 'Xóa nhân viên']);
+        Permission::updateOrCreate(['name' => 'user.permission'], ['display_name' => 'Phân quyền', 'description' => 'Phân quyền']);
         // create roles and assign created permissions
         $roleUser = Role::updateOrCreate(['name' => 'user'], ['display_name' => 'Nhân viên', 'description' => 'Quản lý nhân viên']);
         $roleUser->syncPermissions(Permission::where('name', 'LIKE', 'user.%')->pluck('id'));

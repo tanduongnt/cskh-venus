@@ -10,10 +10,6 @@ class CreateUtilityType extends CreateRecord
 {
     protected static string $resource = UtilityTypeResource::class;
 
-    protected static ?string $title = 'Thêm mới';
-
-    protected static ?string $breadcrumb = 'Thêm mới';
-
     protected function getRedirectUrl(): string
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');

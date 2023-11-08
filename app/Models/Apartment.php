@@ -34,7 +34,7 @@ class Apartment extends Model
 
     public function customers(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class)->withPivot(['vai_tro', 'customer_id']);
+        return $this->belongsToMany(Customer::class)->withPivot(['vai_tro', 'duoc_uy_quyen', 'customer_id']);
     }
 
     public function owners(): BelongsToMany

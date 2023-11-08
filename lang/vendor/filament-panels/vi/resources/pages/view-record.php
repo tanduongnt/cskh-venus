@@ -2,9 +2,9 @@
 
 return [
 
-    'title' => 'Xem :label',
+    'title' => 'Xem chi tiết',
 
-    'breadcrumb' => 'Xem',
+    'breadcrumb' => 'Xem chi tiết',
 
     'content' => [
 

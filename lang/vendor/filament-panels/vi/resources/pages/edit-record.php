@@ -2,7 +2,7 @@
 
 return [
 
-    'title' => 'Chỉnh sửa :label',
+    'title' => 'Chỉnh sửa',
 
     'breadcrumb' => 'Chỉnh sửa',
 

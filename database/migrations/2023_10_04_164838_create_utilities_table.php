@@ -18,9 +18,9 @@ return new class extends Migration
             $table->string('ten_tien_ich');
             $table->longText('mo_ta')->nullable();
             $table->boolean('cho_phep_dang_ky')->default(true);
-            $table->time('gio_bat_dau');
-            $table->time('gio_ket_thuc');
-            $table->integer('block')->default(60);
+            $table->time('gio_bat_dau')->nullable();
+            $table->time('gio_ket_thuc')->nullable();
+            $table->integer('block')->nullable();
             $table->double('don_gia')->default(0);
             $table->time('gio_bat_dau_tinh_tien')->nullable();
             $table->time('gio_ket_thuc_tinh_tien')->nullable();

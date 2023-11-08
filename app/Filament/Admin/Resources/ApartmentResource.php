@@ -99,9 +99,9 @@ class ApartmentResource extends NestedResource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()->hidden(fn (): bool => !can('apartment.view')),
+                Tables\Actions\EditAction::make()->hidden(fn (): bool => !can('apartment.edit')),
+                Tables\Actions\DeleteAction::make()->hidden(fn (): bool => !can('apartment.delete')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

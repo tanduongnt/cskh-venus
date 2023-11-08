@@ -145,9 +145,9 @@ class UtilityResource extends NestedResource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()->hidden(fn (): bool => !can('utility.view')),
+                Tables\Actions\EditAction::make()->hidden(fn (): bool => !can('utility.edit')),
+                Tables\Actions\DeleteAction::make()->hidden(fn (): bool => !can('utility.delete')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

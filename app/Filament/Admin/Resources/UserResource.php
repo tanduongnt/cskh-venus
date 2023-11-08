@@ -83,12 +83,13 @@ class UserResource extends Resource
                 Action::make('permissions')
                     ->url(fn (User $record): string => route('filament.admin.resources.users.permissions', $record))
                     ->openUrlInNewTab()
-                    ->label('Quyền')
+                    ->label('Phân quyền')
                     ->icon('heroicon-s-lock-closed')
-                    ->color('success'),
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                    ->color('success')
+                    ->hidden(fn (): bool => !can('user.permission')),
+                Tables\Actions\ViewAction::make()->hidden(fn (): bool => !can('user.view')),
+                Tables\Actions\EditAction::make()->hidden(fn (): bool => !can('user.edit')),
+                Tables\Actions\DeleteAction::make()->hidden(fn (): bool => !can('user.delete')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -73,9 +73,9 @@ class UtilityTypeResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()->hidden(fn (): bool => !can('utility_type.view')),
+                Tables\Actions\EditAction::make()->hidden(fn (): bool => !can('utility_type.edit')),
+                Tables\Actions\DeleteAction::make()->hidden(fn (): bool => !can('utility_type.delete')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

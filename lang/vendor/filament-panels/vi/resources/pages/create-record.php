@@ -2,7 +2,7 @@
 
 return [
 
-    'title' => 'Tạo :label',
+    'title' => 'Thêm mới',
 
     'breadcrumb' => 'Thêm mới',
 

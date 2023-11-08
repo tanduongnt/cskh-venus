@@ -55,4 +55,17 @@ class Utility extends Model
     {
         return $this->morphOne(Invoiceable::class, 'invoiceable');
     }
+
+    public function registrations(): BelongsToMany
+    {
+        return $this->belongsToMany(Registration::class)
+            ->withPivot([
+                'thoi_gian',
+                'thoi_gian_bat_dau',
+                'thoi_gian_ket_thuc',
+                'so_luong',
+                'muc_thu',
+                'thanh_tien'
+            ])->using(RegistrationUtility::class);
+    }
 }

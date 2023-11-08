@@ -16,6 +16,10 @@ class Permission extends Page
 
     protected static string $resource = UserResource::class;
 
+    protected static ?string $title = 'Phân quyền';
+
+    protected static ?string $breadcrumb = 'Phân quyền';
+
     protected static string $view = 'filament.admin.resources.user-resource.pages.permission';
 
     public $user;
@@ -35,13 +39,10 @@ class Permission extends Page
 
     public function grant()
     {
-        try {
-            DB::transaction(function () {
-                $this->user->roles()->sync($this->roles);
-                $this->user->permissions()->sync($this->permissions);
-            });
-            $this->redirect(UserResource::class);
-        } catch (\Exception $ex) {
-        }
+        DB::transaction(function () {
+            $this->user->roles()->sync($this->roles);
+            $this->user->permissions()->sync($this->permissions);
+        });
+        $this->redirect(UserResource::getUrl('index'));
     }
 }

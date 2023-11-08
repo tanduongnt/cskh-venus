@@ -49,6 +49,7 @@ class CustomersRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('ho_va_ten')->label('Tên'),
                 Tables\Columns\TextColumn::make('vai_tro')->formatStateUsing(fn (string $state): string => __($state))->label('Vai trò'),
+                Tables\Columns\IconColumn::make('duoc_uy_quyen')->boolean()->label('Được ủy quyền'),
             ])
             ->filters([
                 //
@@ -56,10 +57,11 @@ class CustomersRelationManager extends RelationManager
             ->headerActions([
                 Tables\Actions\AttachAction::make()->form(fn (AttachAction $action): array => [
                     $action->getRecordSelect(),
-                    Forms\Components\Select::make('role')
+                    Forms\Components\Select::make('vai_tro')
                         ->options(ApartmentCustomerRole::class)
                         ->required()
-                        ->native(false),
+                        ->native(false)
+                        ->label('Vai trò'),
                 ])
                     ->label('Thêm mới')
                     ->modalHeading('Thêm mới thành viên')

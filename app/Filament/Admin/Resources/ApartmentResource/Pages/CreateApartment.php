@@ -25,10 +25,6 @@ class CreateApartment extends CreateRecord
 
     protected static string $resource = ApartmentResource::class;
 
-    protected static ?string $title = 'Thêm mới';
-
-    protected static ?string $breadcrumb = 'Thêm mới';
-
     protected function getRedirectUrl(): string
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');

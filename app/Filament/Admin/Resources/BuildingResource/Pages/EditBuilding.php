@@ -10,10 +10,6 @@ class EditBuilding extends EditRecord
 {
     protected static string $resource = BuildingResource::class;
 
-    protected static ?string $title = 'Chỉnh sửa';
-
-    protected static ?string $breadcrumb = 'Chỉnh sửa';
-
     protected function getRedirectUrl(): string
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');
