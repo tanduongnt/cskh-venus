@@ -24,3 +24,36 @@ if (!function_exists('notSuperAdmin')) {
         return !Auth::user()->can('do anything');
     }
 }
+
+if (!function_exists('getBetweenDates')) {
+    function getBetweenDates($startDate, $endDate)
+    {
+        $rangArray = [];
+        $startDate = strtotime($startDate);
+        $endDate = strtotime($endDate);
+        for ($currentDate = $startDate; $currentDate <= $endDate; $currentDate += (86400)) {
+            $date = date('Y-m-d', $currentDate);
+            $rangArray[] = $date;
+        }
+        return $rangArray;
+    }
+
+}
+
+if (!function_exists('groupDatesByMonth')) {
+    function groupDatesByMonth($startDate, $endDate)
+    {
+        $months = collect();
+        $dates = getBetweenDates($startDate, $endDate);
+        foreach ($dates as $date) {
+            $timestamp = strtotime($date);
+            $month = date('m', $timestamp);
+            if (!$months->has($month)) {
+                $months->put($month, collect());
+                //$months[$month] = collect();
+            }
+            $months->get($month)->push($date);
+        }
+        return $months;
+    }
+}

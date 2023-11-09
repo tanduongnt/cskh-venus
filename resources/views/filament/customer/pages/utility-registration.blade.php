@@ -70,7 +70,6 @@
                     </tbody>
                 </table>
             </div>
-
         @endif
 
         @if ($utility_id)

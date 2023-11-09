@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('utility_types', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('ten_loai_tien_ich');
-            $table->integer('gioi_han')->default(0);
             $table->longText('mo_ta')->nullable();
             $table->integer('sap_xep')->nullable();
             $table->timestamps();

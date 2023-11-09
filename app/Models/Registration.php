@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -43,5 +44,10 @@ class Registration extends Model
                 'muc_thu',
                 'thanh_tien'
             ])->using(RegistrationUtility::class);
+    }
+
+    public function apartment(): BelongsTo
+    {
+        return $this->belongsTo(Apartment::class);
     }
 }

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->double('don_gia')->default(0);
             $table->time('gio_bat_dau_tinh_tien')->nullable();
             $table->time('gio_ket_thuc_tinh_tien')->nullable();
+            $table->integer('gioi_han')->default(0);
             $table->integer('sap_xep')->nullable();
             $table->boolean('active')->default(true);
             $table->timestamps();

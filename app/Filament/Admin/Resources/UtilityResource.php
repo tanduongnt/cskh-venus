@@ -118,6 +118,10 @@ class UtilityResource extends NestedResource
                             ->numeric()
                             ->default(0)
                             ->label('Giá tiền mỗi block'),
+                        TextInput::make('gioi_han')
+                            ->default(0)
+                            ->numeric()
+                            ->label('Giới hạn'),
                     ])
                         ->hidden(fn (Get $get): bool => !$get('cho_phep_dang_ky'))
                         ->columns(['md' => 3]),

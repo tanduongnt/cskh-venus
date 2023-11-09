@@ -46,4 +46,9 @@ class Apartment extends Model
     {
         return $this->belongsToMany(Customer::class)->withPivot(['vai_tro'])->wherePivot('vai_tro', ApartmentCustomerRole::MEMBER);
     }
+
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(Registration::class);
+    }
 }

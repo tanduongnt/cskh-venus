@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Pages;
 
+use Carbon\Carbon;
 use App\Models\Utility;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -11,16 +12,20 @@ use Filament\Forms\Form;
 use Filament\Pages\Page;
 use App\Models\Apartment;
 use App\Models\UtilityType;
+use App\Models\Registration;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Wizard\Step;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Concerns\InteractsWithForms;
+use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 
 class UtilityRegistrationPage extends Page
 {
@@ -52,9 +57,11 @@ class UtilityRegistrationPage extends Page
     public float $amount = 0;
     public float $quantity = 1;
 
-
+    public $dates;
+    public $week;
     public $selectedSurcharges = [];
     public $defaultSurcharge = [];
+    public $groupDatesByMonth = [];
 
     public ?Collection $buildings;
     public ?Collection $apartments;
@@ -63,11 +70,15 @@ class UtilityRegistrationPage extends Page
     public ?Collection $utility_types;
     public ?Utility $utility;
     public ?Collection $blocks;
+    public ?Collection $invoices;
     public ?Collection $selectedBlocks;
     public ?Collection $surchargeList;
 
     public function mount()
     {
+        //dd(groupDatesByMonth("2023-10-15", "2023-11-30"));
+        $this->blocks = collect();
+        $this->invoices = collect();
         $this->buildings = Building::all();
         $this->apartments = collect();
         $this->customers = collect();
@@ -219,21 +230,259 @@ class UtilityRegistrationPage extends Page
                     ->label('')
                     ->schema([
                         TextInput::make('customer_id'),
-                        TextInput::make('utility_type_id'),
                         TextInput::make('utility_id'),
-                        DatePicker::make('registration_date')
-                            ->closeOnDateSelection()
+                        DateRangePicker::make('dates')
+                            ->setAutoApplyOption(true)
+                            ->format('d/m/Y'),
+                        Select::make('week')
+                            ->options([
+                                '1' => 'Thứ 2',
+                                '2' => 'Thứ 3',
+                                '3' => 'Thứ 4',
+                                '4' => 'Thứ 5',
+                                '5' => 'Thứ 6',
+                                '6' => 'Thứ 7',
+                                '0' => 'Chủ nhật',
+                            ])
+                            ->multiple()
                             ->native(false)
-                            ->live()
-                            ->displayFormat('d/m/Y')
-                            ->label('Ngày sử dụng')
-                            ->columnSpan('full')
-                    ])
-                    ->hidden(fn (Get $get): bool => !$get('utility_id')),
+                            ->label('Ngày trong tuần'),
+                    ]),
+                //->hidden(fn (Get $get): bool => !$get('utility_id')),
             ]);
+    }
+
+    public function updatedUtilityId()
+    {
+        if ($this->utility_id && $this->dates) {
+            $this->resetUtility();
+        }
+    }
+
+    public function updatedSelectedSurcharges()
+    {
+        $this->loadSurchargeList();
+    }
+
+    public function resetUtility()
+    {
+        //$this->week = [];
+        $this->totalSurchargeAmount = 0;
+        $this->totalBlockAmount = 0;
+        $this->selectedSurcharges = [];
+        $this->blocks = collect();
+        $this->invoices = collect();
+        $this->loadUtility();
+        $this->loadRemainingTimes();
+        $this->generateUtilityBlocks();
+        $this->loadSurchargeList();
+        $this->detail();
+    }
+
+    public function loadUtility()
+    {
+        $this->utility = Utility::with(['surcharges'])->find($this->utility_id);
+        //dd($start);
+        if ($this->utility->surcharges) {
+            $this->surchargeList = $this->utility->surcharges->where('active', true);
+        }
+    }
+
+    public function loadRemainingTimes()
+    {
+        $this->remainingTimes = 0;
+        if ($this->utility->gioi_han > 0) {
+            $registrationCount = Registration::where('apartment_id', $this->apartment_id)->count();
+            $this->remainingTimes = $this->utility->gioi_han - $registrationCount;
+            //dd($this->remainingTimes);
+        }
+    }
+
+    public function generateUtilityBlocks()
+    {
+        if ($this->utility->block) {
+            $block_price = $this->utility->don_gia;
+            $blockCount = floor(1440 / $this->utility->block);
+            $start_time = Carbon::parse($this->utility->gio_bat_dau);
+            $end_time = Carbon::parse($this->utility->gio_ket_thuc);
+            $charge_start_time = Carbon::parse($this->utility->gio_bat_dau_tinh_tien);
+            $charge_end_time = Carbon::parse($this->utility->gio_ket_thuc_tinh_tien);
+            for ($i = 0; $i < $blockCount; $i++) {
+                $minutes =  $i * $this->utility->block;
+                $block_start = Carbon::today()->addMinutes($minutes);
+                $block_end = Carbon::today()->addMinutes($minutes + $this->utility->block);
+                $enable =  $start_time->lte($block_start) && $end_time->gte($block_end);
+                $chargeableBlock = $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
+                $price = ($enable && $chargeableBlock) ? $block_price : 0;
+                $registered = $this->countBlockRegisted($block_start, $block_end) > 0;
+                $this->blocks->push([
+                    'enable'        => $enable,
+                    'start'         => $block_start,
+                    'end'           => $block_end,
+                    'chargeable'    => $chargeableBlock,
+                    'price'         => $price,
+                    'selected'      => $selected ?? false,
+                    'registered'    => $registered ?? false,
+                ]);
+            }
+            //dd($this->blocks);
+        }
+    }
+
+    public function loadSurchargeList()
+    {
+        $this->totalSurchargeAmount = 0;
+        // Lấy danh sách phụ thu theo tiện ích
+        if ($this->surchargeList->count() > 0) {
+            // Đếm số block được chọn
+            $selectedBlocks = $this->blocks->filter(function ($value, $key) {
+                return $value['selected'];
+            });
+            $selectedBlockCount = $selectedBlocks->count();
+            $selectedBlockAmount = $selectedBlocks->sum('price');
+            $this->surchargeList->transform(function ($item, $key) use ($selectedBlockCount, $selectedBlockAmount) {
+                $quantity = $item['thu_theo_block'] ? $selectedBlockCount : 1;
+                $price = $item['muc_thu'];
+                if (!$item['co_dinh']) {
+                    $price = $selectedBlockAmount * $item['muc_thu'] / 100;
+                }
+                $amount = $quantity * $price;
+                $item['so_luong'] = $quantity;
+                $item['tong_tien'] = $amount;
+                $item['selected'] = $item['mac_dinh'];
+                return $item;
+            });
+            $this->setDefaultSurcharge();
+        }
+    }
+
+    public function setDefaultSurcharge()
+    {
+        // lấy danh sách phụ thu mặc định
+        $defaultSurcharge = $this->surchargeList->filter(function ($value, $key) {
+            return $value['mac_dinh'];
+        })->pluck('id')->toArray();
+        //dd($this->surchargeList);
+        $this->selectedSurcharges = array_unique(array_merge($this->selectedSurcharges, $defaultSurcharge));
+        // Lấy danh sách phụ thu được chọn theo id
+        $selectedSurchargeList = $this->surchargeList->whereIn('id', $this->selectedSurcharges);
+        // Tính tổng tiền phụ thu được chọn
+        if ($selectedSurchargeList->count() > 0) {
+            $this->totalSurchargeAmount = $selectedSurchargeList->sum('tong_tien');
+        }
+        //dd($this->selectedSurcharges);
+    }
+
+    public function selectBlock($index)
+    {
+        $block = $this->blocks[$index];
+        $block['selected'] = !$block['selected'];
+        if ($block['chargeable']) {
+            $price = ($block['selected']) ? $block['price'] : -$block['price'];
+            $this->totalBlockAmount += $price;
+        }
+        $this->blocks->put($index, $block);
+        $this->loadSurchargeList();
+    }
+
+    public function countBlockRegisted($start, $end)
+    {
+        $dates = preg_split('/\s*-\s*/', trim($this->dates));
+        $startDate = Carbon::createFromFormat('d/m/Y', $dates[0])->toDateString();
+        $endDate = Carbon::createFromFormat('d/m/Y', $dates[1])->toDateString();
+        return Registration::where('apartment_id', $this->apartment_id)->whereHas('utilities', function ($query) use ($startDate, $endDate, $start, $end) {
+            $query->where('utilities.id', $this->utility_id);
+            $query->whereBetween('thoi_gian', [$startDate, $endDate]);
+            $query->where('thoi_gian_bat_dau', $start);
+            $query->where('thoi_gian_ket_thuc', $end);
+        })->count();
+    }
+
+    public function detail()
+    {
+        $this->invoices = collect();
+        $dayOfWeek = collect();
+        $registrationUtility = [];
+        $this->loadSurchargeList();
+        $dates = preg_split('/\s*-\s*/', trim($this->dates));
+        $startDate = $dates[0];
+        $endDate = $dates[1];
+        $getBetweenDates = getBetweenDates(Carbon::createFromFormat('d/m/Y', $startDate)->toDateString(), Carbon::createFromFormat('d/m/Y', $endDate)->toDateString());
+        $groupDatesByMonth = groupDatesByMonth(Carbon::createFromFormat('d/m/Y', $startDate)->toDateString(), Carbon::createFromFormat('d/m/Y', $endDate)->toDateString());
+        //dd($groupDatesByMonth);
+        foreach ($groupDatesByMonth as $key => $dateOfMount) {
+            //dd($dateOfMount);
+            $this->invoices->push([
+                'dateOfMount' =>  $dateOfMount,
+            ]);
+            foreach ($dateOfMount as $date) {
+                $dateOfWeek = Carbon::parse($date)->dayOfWeek;
+                $dayOfWeek->push([
+                    'date' => $date,
+                    'dateOfWeek' => $dateOfWeek,
+                ]);
+            }
+            $registration_dates = $dayOfWeek->whereIn('dateOfWeek', $this->week);
+        }
+        dd($this->invoices, $dayOfWeek);
     }
 
     public function store()
     {
+        $this->loadSurchargeList();
+        $this->detail();
+        $selectedBlocks = $this->blocks->filter(function ($value, $key) {
+            return $value['selected'];
+        });
+        if ($selectedBlocks && $selectedBlocks->count() > 0) {
+            foreach ($selectedBlocks as $key => $block) {
+                $start = $block['start'];
+                $end = $block['end'];
+                // $registedInvoiceable = $this->countBlockRegisted($start, $end);
+                // if ($registedInvoiceable > 0) {
+                //     $this->resetUtility();
+                //     Notification::make()->title('Đã có người đăng ký thời gian này')->danger()->send();
+                //     break;
+                // } else {
+                foreach ($registration_dates as $key => $registration_date) {
+                    $registrationUtility[] = [
+                        'thoi_gian' => $registration_date['date'],
+                        'thoi_gian_bat_dau' => $start,
+                        'thoi_gian_ket_thuc' => $end,
+                        'so_luong' => 1,
+                        'muc_thu' => $block['price'],
+                        'thanh_tien' => $block['price'],
+                    ];
+                }
+                // }
+            }
+
+            // foreach ($groupDatesByMonth as $key => $dateOfMount) {
+            //     dd($dateOfMount);
+            //     foreach ($dateOfMount as $date) {
+            //         $dateOfWeek = Carbon::parse($date)->dayOfWeek;
+            //         $dayOfWeek->push([
+            //             'date' => $date,
+            //             'dateOfWeek' => $dateOfWeek,
+            //         ]);
+            //     }
+            //     $registration = Registration::create([
+            //         'apartment_id' => $this->apartment_id,
+            //         'thoi_gian_dang_ky' => now(),
+            //         'mo_ta' => ucfirst(strtolower("Đăng ký tiện ích {$this->utility->utilityType->ten_loai_tien_ich} ({$this->utility->ten_tien_ich})")),
+            //         'nguoi_dang_ky' => $this->customer_id,
+            //         'phi_dang_ky' => $this->totalSurchargeAmount,
+            //         'phu_thu' => $this->totalBlockAmount,
+            //         'tong_tien' => $this->totalSurchargeAmount + $this->totalBlockAmount,
+            //     ]);
+            //     $registration_dates = $dayOfWeek->whereIn('dateOfWeek', $this->week);
+            //     $registration->utilities()->attach($this->utility_id, $value);
+            // }
+
+
+            //dd($registration);
+        } else {
+            Notification::make()->title('Chọn thời gian')->danger()->send();
+        }
     }
 }

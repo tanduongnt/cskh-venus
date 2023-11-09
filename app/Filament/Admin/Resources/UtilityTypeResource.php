@@ -48,7 +48,7 @@ class UtilityTypeResource extends Resource
                     TextInput::make('ten_loai_tien_ich')
                         ->required()
                         ->label('Tên loại tiện ích')
-                        ->columnSpan(['md' => 3]),
+                        ->columnSpan(['md' => 2]),
                     TextInput::make('sap_xep')
                         ->nullable()
                         ->numeric()

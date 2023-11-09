@@ -17,7 +17,7 @@ return new class extends Migration
             $table->timestamp('thoi_gian');
             $table->time('thoi_gian_bat_dau');
             $table->time('thoi_gian_ket_thuc');
-            $table->integer('so_luong');
+            $table->integer('so_luong')->default(1);
             $table->double('muc_thu');
             $table->double('thanh_tien');
             $table->timestamps();
