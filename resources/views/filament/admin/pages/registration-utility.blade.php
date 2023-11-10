@@ -7,11 +7,11 @@
             <div class="grid grid-cols-4 lg:grid-cols-6 gap-4">
                 @foreach ($blocks as $index => $block)
                     @if ($block['enable'])
-                        @if ($block['registered'])
+                        {{--  @if ($block['registered'])
                             <div class="text-center text-sm text-white rounded-lg p-3 bg-red-700">
                                 {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
                             </div>
-                        @else
+                        @else  --}}
                             <div @class([
                                 'border text-center text-sm text-white rounded-lg p-3 cursor-pointer',
                                 'bg-green-700' => $block['enable'] && !$block['selected'],
@@ -19,7 +19,7 @@
                             ]) wire:click="selectBlock('{{ $index }}')">
                                 {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
                             </div>
-                        @endif
+                        {{--  @endif  --}}
                     @else
                         <div class="text-center text-sm text-white rounded-lg p-3 bg-gray-500">
                             {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
@@ -48,6 +48,7 @@
                         <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Chọn</th>
                         <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Tên phụ thu</th>
                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mức thu</th>
+                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Số lượng</th>
                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Thành tiền</th>
                     </tr>
                 </thead>
@@ -61,8 +62,9 @@
                                     'text-gray-300' => $surcharge->mac_dinh,
                                 ]) {{ $surcharge->mac_dinh ? 'disabled' : '' }}>
                             </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->ten_phu_thu }} - {{ $surcharge->id }}</td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->ten_phu_thu }}</td>
                             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ number_format($surcharge->muc_thu) }}{{ $surcharge->co_dinh ? 'đ' : '%' }}</td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->so_luong }}</td>
                             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ number_format($surcharge->tong_tien) }}đ</td>
                         </tr>
                     @endforeach
@@ -72,6 +74,39 @@
     @endif
 
     @if ($utility_id)
+        @foreach ($invoices as $invoice)
+            <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
+
+                <div class="sm:flex-auto mt-2">
+                    <h1 class="text-xl font-semibold text-gray-900">Phiếu thu tháng {{ $invoice['month'] }}</h1>
+                </div>
+                <table class="min-w-full divide-y divide-gray-300">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Ngày</th>
+                            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Phí đăng ký</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Phụ thu</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Tổng tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        @foreach ($invoiceables as $key => $invoiceable)
+                            @if ($invoiceable['thoi_gian']->month == $invoice['month'])
+                                <tr>
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"> {{ $invoiceable['thoi_gian']->format('d/m/Y') }}</td>
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['phi_dang_ky'] }}</td>
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['phu_thu'] }}</td>
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['tong_tien'] }}</td>
+                                </tr>
+                            @endif
+                        @endforeach
+                    </tbody>
+                </table>
+
+            </div>
+        @endforeach
+
+
         <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
             <div class="grid grid-cols-2 gap-4">
                 <div class="text-left">
@@ -79,17 +114,13 @@
                         Số lần đăng ký còn lại trong tháng <span class='text-sky-700 text-lg'>{{ $remainingTimes }}</span>
                         <br>
                     @endif
-                    Phí đăng ký: <span class="text-sky-700">{{ number_format($totalBlockAmount) }}đ</span>
+                    Phí đăng ký: <span class="text-sky-700">{{ number_format($totalBlockAmountByMonth) }}đ</span>
                     <br>
-                    Phí phụ thu: <span class="text-sky-700">{{ number_format($totalSurchargeAmount) }}đ</span>
+                    Phí phụ thu: <span class="text-sky-700">{{ number_format($totalSurchargeAmountByMonth) }}đ</span>
                     <br>
-                    Tổng tiền: <span class="text-sky-700">{{ number_format($totalBlockAmount + $totalSurchargeAmount) }}đ</span>
+                    Tổng tiền: <span class="text-sky-700">{{ number_format($totalBlockAmountByMonth + $totalSurchargeAmountByMonth) }}đ</span>
                 </div>
             </div>
-        </div>
-
-        <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
-
         </div>
 
         <div>
