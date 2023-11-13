@@ -15,8 +15,9 @@ return new class extends Migration
             $table->foreignUuid('registration_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('utility_id')->constrained()->cascadeOnDelete();
             $table->timestamp('thoi_gian');
-            $table->time('thoi_gian_bat_dau');
-            $table->time('thoi_gian_ket_thuc');
+            $table->string('mo_ta');
+            $table->time('thoi_gian_bat_dau')->nullable();
+            $table->time('thoi_gian_ket_thuc')->nullable();
             $table->integer('so_luong')->default(1);
             $table->double('muc_thu');
             $table->double('thanh_tien');

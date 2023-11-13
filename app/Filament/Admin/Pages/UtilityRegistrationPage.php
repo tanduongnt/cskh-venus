@@ -62,8 +62,8 @@ class UtilityRegistrationPage extends Page
     public $dates;
     public $week;
     public $selectedSurcharges = [];
-    public $defaultSurcharge = [];
     public $groupDatesByMonth = [];
+    public $keyInvoice = [];
 
     public ?Collection $buildings;
     public ?Collection $apartments;
@@ -272,6 +272,7 @@ class UtilityRegistrationPage extends Page
     public function updatedSelectedSurcharges()
     {
         $this->loadSurchargeList();
+        $this->detailInvoices();
     }
 
     public function resetUtility()
@@ -281,6 +282,7 @@ class UtilityRegistrationPage extends Page
         $this->totalSurchargeAmountByMonth = 0;
         $this->totalBlockAmountByMonth = 0;
         $this->selectedSurcharges = [];
+        $this->keyInvoice = [];
         $this->blocks = collect();
         $this->invoices = collect();
         $this->invoiceables = collect();
@@ -288,6 +290,7 @@ class UtilityRegistrationPage extends Page
         $this->loadRemainingTimes();
         $this->generateUtilityBlocks();
         $this->loadSurchargeList();
+        //$this->detailInvoices();
     }
 
     public function loadUtility()
@@ -412,41 +415,76 @@ class UtilityRegistrationPage extends Page
     public function detailInvoices()
     {
         $this->loadSurchargeList();
+        $selectedBlocks = $this->blocks->filter(function ($value, $key) {
+            return $value['selected'];
+        });
         if ($this->dates) {
             $dayOfWeek = collect();
+            $invoiceableByBlock = collect();
+            $invoiceableBycharge = collect();
+            $invoices = [];
+            $invoiceables = collect();
+            $dateName = collect();
             $dates = preg_split('/\s*-\s*/', trim($this->dates));
-            $startDate = Carbon::createFromFormat('d/m/Y', $dates[0])->toDateString();
-            $endDate = Carbon::createFromFormat('d/m/Y', $dates[1])->toDateString();
-            $groupDatesByMonth = groupDatesByMonth($startDate, $endDate);
-            foreach ($groupDatesByMonth as $month => $dateOfMonth) {
-                $groupDatesByKey = $groupDatesByMonth[$month];
-                foreach ($groupDatesByKey as $date) {
-                    $dateOfWeek = Carbon::parse($date)->dayOfWeek;
-                    $dayOfWeek->push([
-                        'date' => $date,
-                        'dateOfWeek' => $dateOfWeek,
-                    ]);
-                }
-                $registration_dates = $dayOfWeek->whereIn('dateOfWeek', $this->week);
-                $this->invoices->put($month, [
-                    'month'       => $month,
-                    'dateOfMonth' => $registration_dates,
-                ]);
-
-                foreach ($registration_dates as $key => $registration_date) {
-                    if (Carbon::parse($registration_date['date'])->month == $month) {
-                        $this->invoiceables->put($key, [
-                            'thoi_gian' => Carbon::parse($registration_date['date']),
-                            'phi_dang_ky' => $this->totalBlockAmount,
-                            'phu_thu' => $this->totalSurchargeAmount,
-                            'tong_tien' => $this->totalSurchargeAmount + $this->totalBlockAmount,
+            if (count($dates) > 1) {
+                $startDate = Carbon::createFromFormat('d/m/Y', $dates[0])->toDateString();
+                $endDate = Carbon::createFromFormat('d/m/Y', $dates[1])->toDateString();
+                $groupDatesByMonth = groupDatesByMonth($startDate, $endDate);
+                foreach ($groupDatesByMonth as $month => $dateOfMonth) {
+                    $groupDatesByKey = $groupDatesByMonth[$month];
+                    foreach ($groupDatesByKey as $date) {
+                        $dateOfWeek = Carbon::parse($date)->dayOfWeek;
+                        $dayOfWeek->push([
+                            'date' => $date,
+                            'dateOfWeek' => $dateOfWeek,
                         ]);
                     }
+                    $registration_dates = $dayOfWeek->whereIn('dateOfWeek', $this->week);
+                    $this->invoices->put($month, [
+                        'month'       => $month,
+                        'dateOfMonth' => $registration_dates,
+                    ]);
+                    $selectedSurchargeList = $this->surchargeList->whereIn('id', $this->selectedSurcharges);
+                    $nextKey = 0;
+                    foreach ($selectedBlocks as $index => $block) {
+                        foreach ($registration_dates as $key => $registration_date) {
+                            if (Carbon::parse($registration_date['date'])->month == $month) {
+                                $keyInvoiceableByBlock = "{$registration_date['date']} {từ {$block['start']->format('H:i')} dến {$block['end']->format('H:i')}";
+                                $invoiceableByBlock->put($keyInvoiceableByBlock, [
+                                    'key' => $keyInvoiceableByBlock,
+                                    'thoi_gian' => Carbon::parse($registration_date['date']),
+                                    'ten' =>  "từ {$block['start']->format('H:i')} dến {$block['end']->format('H:i')}",
+                                    'so_luong' => 1,
+                                    'muc_thu' => $block['price'],
+                                    'thanh_tien' => $block['price'],
+                                    'mac_dinh' => true,
+                                ]);
+                            }
+
+                            foreach ($selectedSurchargeList as $keySurcharge => $surcharge) {
+                                if (Carbon::parse($registration_date['date'])->month == $month) {
+                                    $keyInvoiceableBycharge = "{$registration_date['date']} {$surcharge->ten_phu_thu}";
+                                    $invoiceableBycharge->put($keyInvoiceableBycharge, [
+                                        'key' => $keyInvoiceableBycharge,
+                                        'thoi_gian' => Carbon::parse($registration_date['date']),
+                                        'ten' => $surcharge->ten_phu_thu,
+                                        'so_luong' => $surcharge->so_luong,
+                                        'muc_thu' => $surcharge->muc_thu,
+                                        'thanh_tien' => $surcharge->tong_tien,
+                                        'mac_dinh' => $surcharge->mac_dinh,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    $this->invoiceables = $invoiceables->concat($invoiceableByBlock)->concat($invoiceableBycharge);
+                    // if ($$this->invoiceables->count() > 0) {
+                    $this->totalSurchargeAmountByMonth = $this->invoiceables->sum('phu_thu');
+                    $this->totalBlockAmountByMonth = $this->invoiceables->sum('phi_dang_ky');
+                    // }
                 }
-                // if ($$this->invoiceables->count() > 0) {
-                $this->totalSurchargeAmountByMonth = $this->invoiceables->sum('phu_thu');
-                $this->totalBlockAmountByMonth = $this->invoiceables->sum('phi_dang_ky');
-                // }
+                //dd($selectedSurchargeList->count() * $registration_dates->count());
+                //dd($dateName, $invoiceableByBlock, $selectedBlocks, $invoiceableBycharge, $this->invoiceables, $registration_dates);
             }
         }
         //dd($this->surchargeList, $this->invoiceables);
