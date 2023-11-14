@@ -37,7 +37,6 @@ if (!function_exists('getBetweenDates')) {
         }
         return $rangArray;
     }
-
 }
 
 if (!function_exists('groupDatesByMonth')) {
