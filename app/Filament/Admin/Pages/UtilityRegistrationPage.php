@@ -270,18 +270,14 @@ class UtilityRegistrationPage extends Page
 
     public function updatedSelectedSurcharges()
     {
-        if ($this->registrationUtilityItem && $this->selectedSurcharges) {
-            $this->loadSurchargeList();
-            $this->detailInvoices();
-        }
+        $this->loadSurchargeList();
+        $this->detailInvoices();
     }
 
-    public function updatedRegistrationUtilityItem()
-    {
-        if ($this->registrationUtilityItem && $this->selectedSurcharges) {
-            $this->loadSurchargeList();
-        }
-    }
+    // public function updatedRegistrationUtilityItem()
+    // {
+    //     $this->loadSurchargeList();
+    // }
 
     public function resetUtility()
     {
@@ -374,6 +370,7 @@ class UtilityRegistrationPage extends Page
                 return $item;
             });
             $this->setDefaultSurcharge();
+            //$this->detailInvoices();
         }
     }
 
@@ -466,8 +463,8 @@ class UtilityRegistrationPage extends Page
                                 'thoi_gian' => in_array($dateOfWeek, $this->week) ? Carbon::parse($dateByWeek) : Carbon::parse($dateNotByWeek),
                                 'mo_ta' =>  "Phí sử dụng tiện ích",
                                 'so_luong' => $selectedBlocks->count(),
-                                'muc_thu' => $block['price'],
-                                'thanh_tien' => $block['price'],
+                                'muc_thu' =>  $selectedBlocks->sum('price'),
+                                'thanh_tien' => $selectedBlocks->sum('price'),
                                 'co_dinh' => true,
                                 'bat_buoc' => false,
                             ]);
@@ -493,8 +490,8 @@ class UtilityRegistrationPage extends Page
             // if ($this->invoiceables->count() > 0) {
             $this->totalSurchargeAmountByMonth = $this->invoiceables->sum('phu_thu');
             $this->totalBlockAmountByMonth = $this->invoiceables->sum('phi_dang_ky');
-            //dd($invoiceableBySurcharge);
             $this->setDefaultRegistration();
+            //dd($this->invoiceables, $this->registrationUtilityItem, $this->invoiceables->keys()->toArray());
         }
         //dd($this->surchargeList, $this->invoiceables);
     }
@@ -504,7 +501,7 @@ class UtilityRegistrationPage extends Page
         // lấy danh sách đăng ký mặc định
         $defaultRegistration = $this->invoiceables->keys()->toArray();
         $this->registrationUtilityItem = array_unique(array_merge($this->registrationUtilityItem, $defaultRegistration));
-        //dd($this->registrationUtilityItem, $this->invoiceables);
+        dd($this->registrationUtilityItem, $this->invoiceables, $this->surchargeList);
     }
 
     public function store()

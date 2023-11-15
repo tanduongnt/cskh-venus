@@ -107,8 +107,12 @@
                                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['thoi_gian']->format('d/m/Y') }}</td>
                                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['mo_ta'] }}</td>
                                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['so_luong'] }}</td>
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['muc_thu'] }}{{ $invoiceable['co_dinh'] ? 'đ' : '%' }}</td>
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['thanh_tien'] }}đ</td>
+                                    @if (in_array($key, $registrationUtilityItem))
+                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['muc_thu'] }}{{ $invoiceable['co_dinh'] ? 'đ' : '%' }}</td>
+                                    @else
+                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">0</td>
+                                    @endif
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{in_array($key, $registrationUtilityItem) ?  $invoiceable['thanh_tien'].'đ' : 0}}</td>
 
                                 </tr>
                             @endif
@@ -130,7 +134,7 @@
         @endforeach
 
         @foreach ($registrationUtilityItem as $item)
-            {{$item}}
+            {{ $item }}
         @endforeach
 
 
