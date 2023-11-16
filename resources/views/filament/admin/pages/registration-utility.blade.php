@@ -62,10 +62,10 @@
                                     'text-gray-300' => $surcharge->mac_dinh,
                                 ]) {{ $surcharge->mac_dinh ? 'disabled' : '' }}>
                             </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->ten_phu_thu }}</td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ number_format($surcharge->muc_thu) }}{{ $surcharge->co_dinh ? 'đ' : '%' }}</td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $surcharge->so_luong }}</td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ number_format($surcharge->tong_tien) }}đ</td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $surcharge->ten_phu_thu }}</td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ number_format($surcharge->muc_thu) }}{{ $surcharge->co_dinh ? 'đ' : '%' }}</td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $surcharge->so_luong }}</td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ number_format($surcharge->tong_tien) }}đ</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -74,7 +74,7 @@
     @endif
 
     @if ($utility_id)
-        @foreach ($invoices as $month => $invoice)
+        @foreach ($invoiceables as $month => $itemList)
             <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
 
                 <div class="sm:flex-auto mt-2">
@@ -92,40 +92,40 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
-                        @foreach ($invoiceables->sortBy('thoi_gian') as $key => $invoiceable)
-                            @if ($invoiceable['thoi_gian']->month == $month)
-                                <tr>
-                                    @if ($invoiceable['bat_buoc'])
-                                        <td class="relative w-12 px-6 sm:w-16 sm:px-8">
-                                            <input type="checkbox" wire:key="{{ $key }}" wire:model="registrationUtilityItem" value="{{ $key }}" class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6 text-gray-300" disabled>
-                                        </td>
-                                    @else
-                                        <td class="relative w-12 px-6 sm:w-16 sm:px-8">
-                                            <input type="checkbox" wire:key="{{ $key }}" wire:model.live="registrationUtilityItem" value="{{ $key }}" class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6 text-indigo-600" checked>
-                                        </td>
-                                    @endif
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['thoi_gian']->format('d/m/Y') }}</td>
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['mo_ta'] }}</td>
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['so_luong'] }}</td>
-                                    @if (in_array($key, $registrationUtilityItem))
-                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ $invoiceable['muc_thu'] }}{{ $invoiceable['co_dinh'] ? 'đ' : '%' }}</td>
-                                    @else
-                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">0</td>
-                                    @endif
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{in_array($key, $registrationUtilityItem) ?  $invoiceable['thanh_tien'].'đ' : 0}}</td>
+                        @foreach ($itemList as $itemKey => $item)
+                            <tr>
+                                @if ($item['bat_buoc'])
+                                    <td class="relative w-12 px-6 sm:w-16 sm:px-8">
+                                        <input type="checkbox" wire:key="{{ $itemKey }}" wire:model="registrationUtilityItem" value="{{ $itemKey }}" class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6 text-gray-300" disabled>
+                                    </td>
+                                @else
+                                    <td class="relative w-12 px-6 sm:w-16 sm:px-8">
+                                        <input type="checkbox" wire:key="{{ $itemKey }}" wire:model.live="registrationUtilityItem" value="{{ $itemKey }}" class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6 text-indigo-600">
+                                    </td>
+                                @endif
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['ngay']->format('d/m/Y') }}</td>
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['mo_ta'] }}</td>
+                                @if (in_array($itemKey, $registrationUtilityItem))
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['so_luong'] }}</td>
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['muc_thu'] }}{{ $item['co_dinh'] ? 'đ' : '%' }}</td>
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['thanh_tien'] }}đ</td>
+                                @else
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">0</td>
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">0</td>
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">0</td>
+                                @endif
 
-                                </tr>
-                            @endif
+                            </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"> Tổng tiền </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"> </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"> </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"> </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"> </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"> </td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> Tổng tiền </td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> </td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> </td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> </td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> </td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $totalAmountByMonth }}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -134,7 +134,7 @@
         @endforeach
 
         @foreach ($registrationUtilityItem as $item)
-            {{ $item }}
+            {{ $item }} <br>
         @endforeach
 
 
@@ -145,11 +145,11 @@
                         Số lần đăng ký còn lại trong tháng <span class='text-sky-700 text-lg'>{{ $remainingTimes }}</span>
                         <br>
                     @endif
-                    Phí đăng ký: <span class="text-sky-700">{{ number_format($totalBlockAmountByMonth) }}đ</span>
+                    {{--  Phí đăng ký: <span class="text-sky-700">{{ number_format($totalBlockAmountByMonth) }}đ</span>
                     <br>
                     Phí phụ thu: <span class="text-sky-700">{{ number_format($totalSurchargeAmountByMonth) }}đ</span>
                     <br>
-                    Tổng tiền: <span class="text-sky-700">{{ number_format($totalBlockAmountByMonth + $totalSurchargeAmountByMonth) }}đ</span>
+                    Tổng tiền: <span class="text-sky-700">{{ number_format($totalBlockAmountByMonth + $totalSurchargeAmountByMonth) }}đ</span>  --}}
                 </div>
             </div>
         </div>
