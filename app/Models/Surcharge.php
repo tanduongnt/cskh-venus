@@ -21,6 +21,7 @@ class Surcharge extends Model
         'thu_theo_block'
     ];
 
+    protected $appends = ['selected'];
 
     protected $casts = [
         'co_dinh' => 'boolean',

@@ -36,9 +36,9 @@ class SurchargesRelationManager extends RelationManager
                     ->maxLength(255)
                     ->label('Mức thu')
                     ->hint('Số tiền cố định hoặc phần trăm (%)'),
-                Forms\Components\Toggle::make('mac_dinh')
+                Forms\Components\Toggle::make('bat_buoc')
                     ->default(1)
-                    ->label('Mặc định')
+                    ->label('Bắt buộc')
                     ->hint('Phụ thu bắt buộc khi đăng ký tiện ích'),
                 Forms\Components\Toggle::make('co_dinh')
                     ->default(1)
@@ -66,7 +66,7 @@ class SurchargesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('ten_phu_thu')
             ->columns([
-                Tables\Columns\IconColumn::make('mac_dinh')->boolean()->label('Mặc định'),
+                Tables\Columns\IconColumn::make('bat_buoc')->boolean()->label('Bắt buộc'),
                 Tables\Columns\TextColumn::make('ten_phu_thu')->label('Tên phụ thu'),
                 Tables\Columns\TextColumn::make('muc_thu')->label('Mức thu'),
                 Tables\Columns\IconColumn::make('co_dinh')->boolean()->label('Cố định'),

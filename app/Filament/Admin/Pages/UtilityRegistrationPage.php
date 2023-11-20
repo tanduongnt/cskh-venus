@@ -52,13 +52,8 @@ class UtilityRegistrationPage extends Page
     public ?string $utility_type_id;
     public ?string $utility_id;
     public ?string $registration_date;
-    public float $totalSurchargeAmount = 0;
-    public float $totalBlockAmount = 0;
-    public float $totalAmountByMonth = 0;
-    public float $totalBlockAmountByMonth = 0;
     public float $remainingTimes = 0;
     public float $amount = 0;
-    public float $quantity = 1;
 
     public $dates;
     public $week;
@@ -73,16 +68,13 @@ class UtilityRegistrationPage extends Page
     public ?Collection $utility_types;
     public ?Utility $utility;
     public ?Collection $blocks;
-    public ?Collection $invoices;
     public ?Collection $invoiceables;
     public ?Collection $selectedBlocks;
     public ?Collection $surchargeList;
-    public ?Collection $registrationList;
 
     public function mount()
     {
         $this->blocks = collect();
-        $this->invoices = collect();
         $this->invoiceables = collect();
         $this->buildings = Building::all();
         $this->apartments = collect();
@@ -265,40 +257,12 @@ class UtilityRegistrationPage extends Page
         }
     }
 
-    public function updatedWeek()
-    {
-        $this->detailInvoices();
-    }
-
-    public function updatedDates()
-    {
-        $this->detailInvoices();
-    }
-
-    public function updatedSelectedSurcharges()
-    {
-        $this->loadSurchargeList();
-        $this->detailInvoices();
-    }
-
-    public function updatedRegistrationUtilityItem()
-    {
-        $this->loadSurchargeList();
-        $this->amountByMonth();
-    }
-
     public function resetUtility()
     {
-        $this->totalSurchargeAmount = 0;
-        $this->totalBlockAmount = 0;
-        $this->totalAmountByMonth = 0;
-        $this->totalBlockAmountByMonth = 0;
         $this->selectedSurcharges = [];
         $this->registrationUtilityItem = [];
         $this->blocks = collect();
-        $this->invoices = collect();
         $this->invoiceables = collect();
-        $this->registrationList = collect();
         $this->loadUtility();
         $this->loadRemainingTimes();
         $this->generateUtilityBlocks();
@@ -309,9 +273,6 @@ class UtilityRegistrationPage extends Page
     {
         $this->utility = Utility::with(['surcharges'])->find($this->utility_id);
         //dd($start);
-        if ($this->utility->surcharges) {
-            $this->surchargeList = $this->utility->surcharges->where('active', true);
-        }
     }
 
     public function loadRemainingTimes()
@@ -356,43 +317,12 @@ class UtilityRegistrationPage extends Page
 
     public function loadSurchargeList()
     {
-        $this->totalSurchargeAmount = 0;
-        // Lấy danh sách phụ thu theo tiện ích
-        if ($this->surchargeList->count() > 0) {
-            // Đếm số block được chọn
-            $selectedBlocks = $this->blocks->filter(function ($value, $key) {
-                return $value['selected'];
-            });
-            $selectedBlockCount = $selectedBlocks->count();
-            $selectedBlockAmount = $selectedBlocks->sum('price');
-            $this->surchargeList->transform(function ($item, $key) use ($selectedBlockCount, $selectedBlockAmount) {
-                $quantity = $item['thu_theo_block'] ? $selectedBlockCount : 1;
-                $price = $item['muc_thu'];
-                if (!$item['co_dinh']) {
-                    $price = $selectedBlockAmount * $item['muc_thu'] / 100;
-                }
-                $amount = $quantity * $price;
-                $item['so_luong'] = $quantity;
-                $item['tong_tien'] = $amount;
-                $item['selected'] = $item['mac_dinh'];
+        if ($this->utility->surcharges) {
+            $this->surchargeList = $this->utility->surcharges->where('active', true);
+            $this->surchargeList->transform(function ($item, $key) {
+                $item['selected'] = $item['bat_buoc'];
                 return $item;
             });
-            $this->setDefaultSurcharge();
-        }
-    }
-
-    public function setDefaultSurcharge()
-    {
-        // lấy danh sách phụ thu mặc định
-        $defaultSurcharge = $this->surchargeList->filter(function ($value, $key) {
-            return $value['mac_dinh'];
-        })->pluck('id')->toArray();
-        $this->selectedSurcharges = array_unique(array_merge($this->selectedSurcharges, $defaultSurcharge));
-        // Lấy danh sách phụ thu được chọn theo id
-        $selectedSurchargeList = $this->surchargeList->whereIn('id', $this->selectedSurcharges);
-        // Tính tổng tiền phụ thu được chọn
-        if ($selectedSurchargeList->count() > 0) {
-            $this->totalSurchargeAmount = $selectedSurchargeList->sum('tong_tien');
         }
     }
 
@@ -402,31 +332,15 @@ class UtilityRegistrationPage extends Page
         $block['selected'] = !$block['selected'];
         if ($block['chargeable']) {
             $price = ($block['selected']) ? $block['price'] : -$block['price'];
-            $this->totalBlockAmount += $price;
+            //$this->totalBlockAmount += $price;
         }
         $this->blocks->put($index, $block);
         $this->detailInvoices();
         $this->loadSurchargeList();
     }
 
-    public function countBlockRegisted($start, $end)
-    {
-        if ($this->dates) {
-            $dates = preg_split('/\s*-\s*/', trim($this->dates));
-            $startDate = Carbon::createFromFormat('d/m/Y', $dates[0])->toDateString();
-            $endDate = Carbon::createFromFormat('d/m/Y', $dates[1])->toDateString();
-            return Registration::where('apartment_id', $this->apartment_id)->whereHas('utilities', function ($query) use ($startDate, $endDate, $start, $end) {
-                $query->where('utilities.id', $this->utility_id);
-                $query->whereBetween('thoi_gian', [$startDate, $endDate]);
-                $query->where('thoi_gian_bat_dau', $start);
-                $query->where('thoi_gian_ket_thuc', $end);
-            })->count();
-        }
-    }
-
     public function detailInvoices()
     {
-        $this->loadSurchargeList();
         // Lấy block theo selected
         $selectedBlocks = $this->blocks->filter(function ($value, $key) {
             return $value['selected'];
@@ -444,8 +358,8 @@ class UtilityRegistrationPage extends Page
                 $itemList = collect();
                 foreach ($datesOfMonth as $date) {
                     // tìm ngày trong tuần
-                    $dateOfWeek = Carbon::parse($date)->dayOfWeek;
-                    if (in_array($dateOfWeek, $this->week)) {
+                    $selectedDayOfWeek = Carbon::parse($date)->dayOfWeek;
+                    if (in_array($selectedDayOfWeek, $this->week)) {
                         $keyInvoiceableByblock = Str::slug("{$date}");
                         $itemList->put($keyInvoiceableByblock, [
                             'key' => $keyInvoiceableByblock,
