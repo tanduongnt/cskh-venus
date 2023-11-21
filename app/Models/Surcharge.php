@@ -21,19 +21,11 @@ class Surcharge extends Model
         'thu_theo_block'
     ];
 
-    protected $appends = ['selected'];
-
     protected $casts = [
         'co_dinh' => 'boolean',
         'mac_dinh' => 'boolean',
         'thu_theo_block' => 'boolean',
     ];
-
-    public function invoiceable()
-    {
-        return $this->morphOne(Invoiceable::class, 'invoiceable');
-    }
-
 
     public function utility(): BelongsTo
     {

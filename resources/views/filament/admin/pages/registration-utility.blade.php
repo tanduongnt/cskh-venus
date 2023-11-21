@@ -40,7 +40,7 @@
         @endif
     </div>
 
-    @if ($utility_id && $surchargeList && $surchargeList->count() > 0)
+    @if ($utility_id && count($surchargeList) > 0)
         <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
             <table class="min-w-full divide-y divide-gray-300">
                 <thead class="bg-gray-50">
@@ -48,24 +48,20 @@
                         <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Chọn</th>
                         <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Tên phụ thu</th>
                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mức thu</th>
-                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Số lượng</th>
-                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Thành tiền</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
-                    @foreach ($surchargeList->sortByDesc('default') as $surcharge)
+                    @foreach ($surchargeList as $surcharge)
                         <tr>
                             <td class="relative w-12 px-6 sm:w-16 sm:px-8">
-                                <input type="checkbox" wire:key="{{ $surcharge->id }}" wire:model.live="selectedSurcharges" value="{{ $surcharge->id }}" @class([
+                                <input type="checkbox" wire:key="{{ $surcharge['id'] }}" wire:click="chonPhuThuKhongBatBuoc('{{ $surcharge['id'] }}')" value="{{ $surcharge['id'] }}" @class([
                                     'absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6',
-                                    'text-indigo-600' => !$surcharge->mac_dinh,
-                                    'text-gray-300' => $surcharge->mac_dinh,
-                                ]) {{ $surcharge->mac_dinh ? 'disabled' : '' }}>
+                                    'text-indigo-600' => !$surcharge['bat_buoc'],
+                                    'text-gray-300' => $surcharge['bat_buoc'],
+                                ]) {{ $surcharge['bat_buoc'] ? 'disabled' : '' }} {{ $surcharge['selected'] ? 'checked' : '' }}>
                             </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $surcharge->ten_phu_thu }}</td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ number_format($surcharge->muc_thu) }}{{ $surcharge->co_dinh ? 'đ' : '%' }}</td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $surcharge->so_luong }}</td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ number_format($surcharge->tong_tien) }}đ</td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $surcharge['ten_phu_thu'] }} {{ $surcharge['selected'] }}</td>
+                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ moneyFormat($surcharge['muc_thu']) }}{{ $surcharge['co_dinh'] ? 'đ' : '%' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -92,41 +88,47 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
-                        @foreach ($itemList as $itemKey => $item)
+                        @foreach ($itemList->sortBy('ngay') as $itemKey => $item)
                             <tr>
-                                @if ($item['bat_buoc'])
-                                    <td class="relative w-12 px-6 sm:w-16 sm:px-8">
-                                        <input type="checkbox" wire:key="{{ $itemKey }}" wire:model="registrationUtilityItem" value="{{ $itemKey }}" class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6 text-gray-300" disabled>
-                                    </td>
-                                @else
-                                    <td class="relative w-12 px-6 sm:w-16 sm:px-8">
-                                        <input type="checkbox" wire:key="{{ $itemKey }}" wire:model.live="registrationUtilityItem" value="{{ $itemKey }}" class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6 text-indigo-600">
-                                    </td>
-                                @endif
+                                <td class="relative w-12 px-6 sm:w-16 sm:px-8">
+                                    <input type="checkbox" wire:key="{{ $itemKey }}" wire:click="xuLyDangKyTienIch('{{ $month }}', '{{ $itemKey }}')" value="{{ $itemKey }}" class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 sm:left-6 {{ $item['bat_buoc'] ? 'text-gray-300' : 'text-indigo-600' }}" {{ $item['bat_buoc'] ? 'disabled' : '' }} {{ $item['selected'] ? 'checked' : '' }}>
+                                </td>
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['ngay']->format('d/m/Y') }}</td>
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['mo_ta'] }}</td>
-                                @if (in_array($itemKey, $registrationUtilityItem))
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['so_luong'] }}</td>
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['muc_thu'] }}{{ $item['co_dinh'] ? 'đ' : '%' }}</td>
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['thanh_tien'] }}đ</td>
-                                @else
+                                {{--  @if (in_array($itemKey, $registrationUtilityItem))  --}}
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $item['so_luong'] }}</td>
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ moneyFormat($item['muc_thu']) }}{{ $item['co_dinh'] ? 'đ' : '%' }}</td>
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ moneyFormat($item['thanh_tien']) }}đ</td>
+                                {{--  @else
                                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">0</td>
                                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">0</td>
                                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">0</td>
-                                @endif
+                                @endif  --}}
 
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
-                        <tr>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> Tổng tiền </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 "> </td>
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">{{ $totalAmountByMonth }}</td>
-                        </tr>
+                        @foreach ($invoices as $key => $invoiceList)
+                            @if ($key == $month)
+                                <tr>
+                                    <th scope="row" colspan="3" class="hidden pl-6 pr-3 pt-6 text-right text-sm font-normal text-gray-500 sm:table-cell md:pl-0">Tổng tiền</th>
+                                    <th scope="row" class="pl-4 pr-3 pt-6 text-left text-sm font-normal text-gray-500 sm:hidden">Tổng tiền</th>
+                                    <td class="pl-3 pr-4 pt-6 text-right text-sm text-gray-500 sm:pr-6 md:pr-0">{{ $invoiceList['phi_dang_ky'] }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" colspan="3" class="hidden pl-6 pr-3 pt-6 text-right text-sm font-normal text-gray-500 sm:table-cell md:pl-0">Tổng tiền</th>
+                                    <th scope="row" class="pl-4 pr-3 pt-6 text-left text-sm font-normal text-gray-500 sm:hidden">Tổng tiền</th>
+                                    <td class="pl-3 pr-4 pt-6 text-right text-sm text-gray-500 sm:pr-6 md:pr-0">{{ $invoiceList['phi_phu_thu'] }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" colspan="3" class="hidden pl-6 pr-3 pt-6 text-right text-sm font-normal text-gray-500 sm:table-cell md:pl-0">Tổng tiền</th>
+                                    <th scope="row" class="pl-4 pr-3 pt-6 text-left text-sm font-normal text-gray-500 sm:hidden">Tổng tiền</th>
+                                    <td class="pl-3 pr-4 pt-6 text-right text-sm text-gray-500 sm:pr-6 md:pr-0">{{ $invoiceList['tong_tien'] }}</td>
+                                </tr>
+                            @endif
+                        @endforeach
+
                     </tfoot>
                 </table>
 

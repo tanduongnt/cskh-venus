@@ -56,3 +56,10 @@ if (!function_exists('groupDatesByMonth')) {
         return $months;
     }
 }
+
+if (!function_exists('moneyFormat')) {
+    function moneyFormat($number)
+    {
+        return number_format($number, 0, ',', '.');
+    }
+}
