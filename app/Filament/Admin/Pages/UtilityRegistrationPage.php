@@ -74,6 +74,8 @@ class UtilityRegistrationPage extends Page
     public ?Collection $selectedBlocks;
     public $surchargeList = [];
 
+    public $selectedItems = [];
+
     public function mount()
     {
         $this->blocks = collect();
@@ -266,11 +268,12 @@ class UtilityRegistrationPage extends Page
         $this->invoices = collect();
         $this->invoiceables = collect();
         $this->surchargeList = [];
+        // array cho wire.model.live để sử dụng checked
+        $this->selectedItems = [];
         $this->loadUtility();
         $this->loadRemainingTimes();
         $this->generateUtilityBlocks();
         $this->layDanhSachPhuThuBatBuoc();
-        //$this->khoiTaoPhieuThu();
     }
 
     public function loadUtility()
@@ -329,17 +332,12 @@ class UtilityRegistrationPage extends Page
             })->toArray();
             $this->surchargeList = Arr::keyBy($surchargeList, 'id');
         }
-        // dd($this->surchargeList);
     }
 
     public function selectBlock($index)
     {
         $block = $this->blocks[$index];
         $block['selected'] = !$block['selected'];
-        if ($block['chargeable']) {
-            $price = ($block['selected']) ? $block['price'] : -$block['price'];
-            //$this->totalBlockAmount += $price;
-        }
         $this->blocks->put($index, $block);
         $selectedBlocks = $this->blocks->filter(function ($value, $key) {
             return $value['selected'];
@@ -350,12 +348,11 @@ class UtilityRegistrationPage extends Page
                 $this->capNhatPhieuThu($block, $selectedBlocks->count());
             } else {
                 // Khởi tạo phiếu thu
-                $this->khoiTaoPhieuThu($block);
+                $this->khoiTaoPhieuThu();
             }
         } else {
             $this->invoiceables = collect();
         }
-        //$this->xuLyPhuThuKhongBatBuoc();
     }
 
     public function chonPhuThuKhongBatBuoc($surchargeId)
@@ -368,11 +365,17 @@ class UtilityRegistrationPage extends Page
         $this->xuLyPhuThuKhongBatBuoc($surcharge);
     }
 
-    public function khoiTaoPhieuThu($block)
+    public function khoiTaoPhieuThu()
     {
         // Lấy danh sách phụ thu bắt buộc
-        $phuThuBatBuoc = $this->utility->surcharges->filter(function ($item, $key) {
-            return $item['bat_buoc'];
+        $surchargeId = Arr::pluck(Arr::where($this->surchargeList, function ($value, $key) {
+            return $value['selected'];
+        }), 'id');
+        $phuThuBatBuoc = $this->utility->surcharges->filter(function ($item, $key) use ($surchargeId) {
+            return in_array($item['id'], $surchargeId);
+        });
+        $block = $this->blocks->firstWhere(function ($value, $key) {
+            return $value['selected'];
         });
         if ($this->dates) {
             $dates = preg_split('/\s*-\s*/', trim($this->dates));
@@ -386,21 +389,24 @@ class UtilityRegistrationPage extends Page
                 foreach ($datesOfMonth as $date) {
                     if (in_array(Carbon::parse($date)->dayOfWeek, $this->week)) {
                         $key = Str::random();
+                        $this->selectedItems[$month][] = $key;
                         $itemList->put($key, [
                             'id' => $this->utility_id,
                             'ngay' => Carbon::parse($date),
                             'mo_ta' =>  "Phí sử dụng tiện ích",
                             'so_luong' => 1,
-                            'muc_thu' =>  $block['price'],
+                            'muc_thu' =>  $this->utility->don_gia,
                             'thanh_tien' => $block['price'],
                             'co_dinh' => true,
                             'thu_theo_block' => true,
                             'bat_buoc' => false,
                             'loai' => 'Utility',
                             'selected' => true,
+                            'disabled' => false,
                         ]);
                         foreach ($phuThuBatBuoc as $surcharge) {
                             $key = Str::random();
+                            $this->selectedItems[$month][] = $key;
                             $price = $surcharge->muc_thu;
                             if (!$surcharge->co_dinh) {
                                 $price = $block['price'] * $surcharge->muc_thu / 100;
@@ -417,31 +423,39 @@ class UtilityRegistrationPage extends Page
                                 'bat_buoc' => $surcharge->bat_buoc,
                                 'loai' => 'Surcharge',
                                 'selected' => true,
+                                'disabled' => false,
                             ]);
                         }
                     }
                 }
-                $this->invoiceables->put($month, $itemList);
+                $this->invoiceables->put($month, $itemList)->toArray();
             }
-            //dd($this->invoiceables, $selectedSurchargeList);
         }
         $this->tinhTien();
     }
 
     public function capNhatPhieuThu($block, $count)
     {
-        // Đếm số lượng block được chọn
+        // Tổng tiền block được chọn
+            $tongTien = $this->blocks->filter(function ($value, $key) {
+                return $value['selected'];
+            })->sum('price');
+        // Cập nhật tiền đăng ký
         foreach ($this->invoiceables as $month => $itemList) {
-            $itemList->transform(function ($item, $key) use ($block, $count) {
-                // cập nhật số lượng
-                $quantity = $item['thu_theo_block'] ? $count : 1;
-                $price = $item['muc_thu'];
-                if (!$item['co_dinh']) {
-                    $amountBlock = $block['price'] * $count;
-                    $price = $amountBlock * $item['muc_thu'] / 100;
+            $itemList->transform(function ($item, $key) use ($block, $count, $tongTien) {
+                $amount = 0;
+                if ($item['loai'] === 'Utility') {
+                    $item['so_luong'] = $count;
+                    $amount = $tongTien;
+                } else {
+                    $quantity = $item['thu_theo_block'] ? $count : 1;
+                    $price = $item['muc_thu'];
+                    if (!$item['co_dinh']) {
+                        $price = $tongTien * $item['muc_thu'] / 100;
+                    }
+                    $amount = $quantity * $price;
+                    $item['so_luong'] = $quantity;
                 }
-                $amount = $quantity * $price;
-                $item['so_luong'] = $quantity;
                 $item['thanh_tien'] = $amount;
                 return $item;
             });
@@ -460,22 +474,26 @@ class UtilityRegistrationPage extends Page
                         return $item['loai'] === 'Utility' && $item['ngay']->eq(Carbon::parse($date));
                     });
                     $key = Str::random();
+                    $this->selectedItems[$month][] = $key;
+                    $quantity = $surcharge['thu_theo_block'] ? $utility['so_luong'] : 1;
                     $price = $surcharge['muc_thu'];
                     if (!$surcharge['co_dinh']) {
                         $price = $utility['thanh_tien'] * $surcharge['muc_thu'] / 100;
                     }
+                    $amount = $quantity * $price;
                     $itemList->put($key, [
                         'id' => $surcharge['id'],
                         'ngay' => Carbon::parse($date),
                         'mo_ta' => $surcharge['ten_phu_thu'],
-                        'so_luong' => 1,
+                        'so_luong' => $quantity,
                         'muc_thu' => $surcharge['muc_thu'],
-                        'thanh_tien' => $price,
+                        'thanh_tien' => $amount,
                         'co_dinh' => $surcharge['co_dinh'],
                         'thu_theo_block' => $surcharge['thu_theo_block'],
                         'bat_buoc' => $surcharge['bat_buoc'],
                         'loai' => 'Surcharge',
                         'selected' => $utility['selected'],
+                        'disabled' => $utility['disabled'],
                     ]);
                 }
             } else {
@@ -492,42 +510,50 @@ class UtilityRegistrationPage extends Page
     public function xuLyDangKyTienIch($month, $itemKey)
     {
         $item = $this->invoiceables[$month][$itemKey];
+        $ngayDangKy = $item['ngay'];
+        $trangThai = !$item['selected'];
         if ($item['loai'] === 'Utility') {
-            $ngayDangKy = $item['ngay'];
-            $trangThai = !$item['selected'];
             $this->invoiceables[$month]->transform(function ($item, $key) use ($ngayDangKy, $trangThai) {
                 if ($item['ngay']->eq($ngayDangKy)) {
                     $item['selected'] = $trangThai;
                 }
                 return $item;
             });
+        } else {
+            $this->invoiceables[$month]->transform(function ($item, $key) use ($itemKey, $trangThai) {
+                if ($key === $itemKey) {
+                    $item['selected'] = $trangThai;
+                }
+                return $item;
+            });
         }
+        $selectedItems = $this->invoiceables[$month]->filter(function ($item, $key) {
+            return $item['selected'] === true;
+        })->keys()->all();
+        $this->selectedItems[$month] = $selectedItems;
         $this->tinhTien();
     }
 
     public function tinhTien()
     {
-        $selected = collect();
         foreach ($this->invoiceables as $month => $itemList) {
-            $selected = $itemList->filter(function ($value, $key) {
-                return $value['selected'];
-            });
-            $phiDangKy = $selected->filter(function ($value, $key) {
-                return $value['loai'] === 'Utility';
+            $phiDangKy = $itemList->filter(function ($value, $key) {
+                return $value['loai'] === 'Utility' && $value['selected'];
             })->sum('thanh_tien');
-            $phiPhuThu = $selected->filter(function ($value, $key) {
-                return $value['loai'] === 'Surcharge';
+            $phiPhuThu = $itemList->filter(function ($value, $key) {
+                return $value['loai'] === 'Surcharge' && $value['selected'];
             })->sum('thanh_tien');
             $tongTien = $phiDangKy + $phiPhuThu;
             $this->invoices->put($month, [
                 'phi_dang_ky' => $phiDangKy,
-                'phi_phu_thu' =>$phiPhuThu,
-                'tong_tien' =>$tongTien]);
+                'phi_phu_thu' => $phiPhuThu,
+                'tong_tien' => $tongTien
+            ]);
         }
-        //dd($this->invoices, $selected, $phiDangKy, $phiPhuThu);
     }
 
     public function store()
     {
+        dd($this->invoices, $this->invoiceables);
     }
 }
