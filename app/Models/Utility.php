@@ -17,17 +17,17 @@ class Utility extends Model
     protected $fillable = [
         'building_id',
         'utility_type_id',
-        'name',
-        'registrable',
-        'start_time',
-        'end_time',
+        'ten_tien_ich',
+        'cho_phep_dang_ky',
+        'gio_bat_dau',
+        'gio_ket_thuc',
         'block',
-        'price',
+        'don_gia',
         'max_times',
-        'charge_start_time',
-        'charge_end_time',
-        'description',
-        'sort',
+        'gio_bat_dau_tinh_tien',
+        'gio_ket_thuc_tinh_tien',
+        'mo_ta_tien_ich',
+        'sap_xep',
         'active',
     ];
 
@@ -61,6 +61,7 @@ class Utility extends Model
         return $this->belongsToMany(Registration::class)
             ->withPivot([
                 'thoi_gian',
+                'mo_ta',
                 'thoi_gian_bat_dau',
                 'thoi_gian_ket_thuc',
                 'so_luong',

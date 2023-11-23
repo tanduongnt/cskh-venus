@@ -28,9 +28,14 @@ class Registration extends Model
         'da_thanh_toan' => 'boolean',
     ];
 
-    public function customers(): BelongsToMany
+    public function members(): BelongsToMany
     {
         return $this->belongsToMany(Customer::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function utilities(): BelongsToMany
@@ -38,12 +43,25 @@ class Registration extends Model
         return $this->belongsToMany(Utility::class)
             ->withPivot([
                 'thoi_gian',
+                'mo_ta',
                 'thoi_gian_bat_dau',
                 'thoi_gian_ket_thuc',
                 'so_luong',
                 'muc_thu',
                 'thanh_tien'
             ])->using(RegistrationUtility::class);
+    }
+
+    public function surcharges(): BelongsToMany
+    {
+        return $this->belongsToMany(Surcharge::class)
+            ->withPivot([
+                'thoi_gian',
+                'mo_ta',
+                'so_luong',
+                'muc_thu',
+                'thanh_tien'
+            ])->using(SurchargeRegistration::class);
     }
 
     public function apartment(): BelongsTo

@@ -24,6 +24,7 @@ use App\Filament\Admin\Pages\RegistrationUtility;
 use App\Filament\Admin\Pages\UtilityRegistrationPage;
 use App\Filament\Admin\Resources\BuildingResource;
 use App\Filament\Admin\Resources\CustomerResource;
+use App\Filament\Admin\Resources\RegistrationResource;
 use App\Filament\Admin\Resources\UtilityTypeResource;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
@@ -69,11 +70,16 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('bi-people-fill')
                     ->label('Khách hàng')
                     ->hidden(fn (): bool => !can('customer.view')),
-                NavigationItem::make('utility-register')
+                NavigationItem::make('utility_register')
                     ->url(fn (): string => UtilityRegistrationPage::getUrl())
-                    ->icon('bi-file-text')
+                    ->icon('bi-file-text-fill')
                     ->sort(3)
                     ->label('Đăng ký tiện ích'),
+                NavigationItem::make('utility_invoices')
+                    ->url(fn (): string => RegistrationResource::getUrl())
+                    ->icon('bi-layout-text-sidebar-reverse')
+                    ->sort(4)
+                    ->label('Phiếu thu tiện ích'),
                 //Cài đặt
                 NavigationItem::make('utility_types')
                     ->group('Cài đặt')

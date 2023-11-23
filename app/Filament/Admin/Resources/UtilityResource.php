@@ -125,7 +125,7 @@ class UtilityResource extends NestedResource
                     ])
                         ->hidden(fn (Get $get): bool => !$get('cho_phep_dang_ky'))
                         ->columns(['md' => 3]),
-                    RichEditor::make('mo_ta')
+                    RichEditor::make('mo_ta_tien_ich')
                         ->nullable()
                         ->label('Mô tả')
                         ->columnSpan(['md' => 'full']),

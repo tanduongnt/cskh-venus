@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('utility_id')->constrained();
             $table->string('ten_phu_thu');
-            $table->boolean('mac_dinh')->default(true);
+            $table->boolean('bat_buoc')->default(true);
             $table->boolean('thu_theo_block')->default(true);
             $table->double('muc_thu')->default(0);
             $table->boolean('co_dinh')->default(true);

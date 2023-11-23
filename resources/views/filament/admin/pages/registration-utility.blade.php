@@ -76,7 +76,6 @@
     @if ($utility_id)
         @foreach ($invoiceables as $month => $itemList)
             <div class="shadow-md bg-white rounded-lg p-3 mt-2 pl-7 cursor-pointer">
-
                 <div class="mt-2">
                     <h1 class="text-xl font-semibold text-gray-900">Phiếu thu tháng {{ $month }}</h1>
                 </div>
@@ -91,20 +90,20 @@
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Thành tiền</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                        @foreach ($itemList->sortBy('ngay') as $itemKey => $item)
+                    @foreach ($itemList->sortBy('ngay') as $itemKey => $item)
+                        <tbody class="divide-y divide-gray-200 {{ $item['registered'] ? ' bg-red-500' : ' bg-white' }}">
                             <tr>
                                 <td class="relative w-12 px-2">
-                                    <input type="checkbox" wire:key="{{ $itemKey }}" wire:model.live="selectedItems.{{$month}}" wire:click="xuLyDangKyTienIch('{{ $month }}', '{{ $itemKey }}')" value="{{ $itemKey }}" class="absolute left-0 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 {{ $item['bat_buoc'] ? 'text-gray-300' : 'text-indigo-600' }}" {{ $item['bat_buoc'] || $item['disabled'] ? 'disabled' : '' }}>
+                                    <input type="checkbox" wire:key="{{ $itemKey }}" wire:model.live="selectedItems.{{ $month }}" wire:click="xuLyDangKyTienIch('{{ $month }}', '{{ $itemKey }}')" value="{{ $itemKey }}" class="absolute left-0 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 {{ $item['bat_buoc'] ? 'text-gray-300' : 'text-indigo-600' }}" {{ $item['bat_buoc'] || $item['disabled'] ? 'disabled' : '' }}>
                                 </td>
                                 <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ $item['ngay']->format('d/m/Y') }}</td>
-                                <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ $item['mo_ta'] }} {{ $item['selected'] }}</td>
+                                <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ $item['mo_ta'] }} {{ $item['registered'] }}</td>
                                 <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ $item['so_luong'] }}</td>
                                 <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ moneyFormat($item['muc_thu']) }}{{ $item['co_dinh'] ? 'đ' : '%' }}</td>
                                 <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ moneyFormat($item['thanh_tien']) }}đ</td>
                             </tr>
-                        @endforeach
-                    </tbody>
+                        </tbody>
+                    @endforeach
                     <tfoot>
                         <tr>
                             <td colspan="4"></td>

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignUuid('building_id')->constrained();
             $table->foreignUuid('utility_type_id')->constrained();
             $table->string('ten_tien_ich');
-            $table->longText('mo_ta')->nullable();
+            $table->longText('mo_ta_tien_ich')->nullable();
             $table->boolean('cho_phep_dang_ky')->default(true);
             $table->time('gio_bat_dau')->nullable();
             $table->time('gio_ket_thuc')->nullable();

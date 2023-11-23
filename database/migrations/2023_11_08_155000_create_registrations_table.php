@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('registrations', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('apartment_id')->constrained();
+            $table->foreignUuid('customer_id')->constrained();
             $table->timestamp('thoi_gian_dang_ky');
             $table->longText('mo_ta');
-            $table->string('nguoi_dang_ky');
             $table->double('phi_dang_ky')->default(0);
             $table->double('phu_thu')->default(0);
             $table->double('tong_tien')->default(0);
