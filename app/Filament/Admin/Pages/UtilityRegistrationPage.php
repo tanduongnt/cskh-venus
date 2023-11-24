@@ -19,6 +19,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Wizard;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -98,141 +99,121 @@ class UtilityRegistrationPage extends Page
     {
         return $form
             ->schema([
-                Wizard::make([
-                    Wizard\Step::make('Building')
-                        ->schema([
-                            Select::make('building_id')
-                                ->options($this->buildings->pluck('ten_toa_nha', 'id'))
-                                ->live()
-                                ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
-                                    $this->apartments = collect();
-                                    $this->utility_types = collect();
-                                    if ($get('building_id')) {
-                                        $this->apartments = Apartment::where('building_id', $get('building_id'))->get();
+                Section::make()
+                    ->schema([
+                        Select::make('building_id')
+                            ->options($this->buildings->pluck('ten_toa_nha', 'id'))
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
+                                $this->apartments = collect();
+                                $this->utility_types = collect();
+                                if ($get('building_id')) {
+                                    $this->apartments = Apartment::where('building_id', $get('building_id'))->get();
 
-                                        $this->utility_types = UtilityType::whereHas('utilities', function ($query) use ($get) {
-                                            $query->whereHas('building', function ($query) use ($get) {
-                                                $query->where('id', $get('building_id'));
-                                            });
-                                        })->get();
-                                        //dd($this->apartments, $this->utility_types);
-                                        if ($this->apartments->count() > 0) {
-                                            $set('apartment_id', null);
-                                        }
-                                        if ($this->utility_types->count() > 0) {
-                                            $set('utility_type_id', null);
-                                            $set('utility_id', null);
-                                        }
-                                    }
-                                })
-                                ->searchable()
-                                ->required()
-                                ->searchPrompt('Tìm theo tên chung cư')
-                                ->label('Tên chung cư')
-                                ->columnSpan(1),
-
-                            Select::make('apartment_id')
-                                ->options(fn (Get $get): Collection =>  $this->apartments->where('building_id', $get('building_id'))->pluck('ma_can_ho', 'id'))
-                                ->live()
-                                ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
-                                    $this->customers = collect();
-                                    $this->utility_types = collect();
-                                    if ($get('building_id')) {
-                                        $this->customers = Customer::whereHas('owns', function ($query) use ($get) {
-                                            $query->where('apartments.id', $get('apartment_id'));
-                                        })->orWhereHas('authorizedPersons', function ($query) use ($get) {
-                                            $query->where('apartments.id', $get('apartment_id'));
-                                        })->get();
-                                        $this->utility_types = UtilityType::whereHas('utilities', function ($query) use ($get) {
-                                            $query->whereHas('building', function ($query) use ($get) {
-                                                $query->where('id', $get('building_id'));
-                                            });
-                                        })->get();
-                                        //dd($this->customers);
-                                        if ($this->customers->count() > 0) {
-                                            $set('customer_id', null);
-                                        }
-                                        if ($this->utility_types->count() > 0) {
-                                            $set('utility_type_id', null);
-                                            $set('utility_id', null);
-                                        }
-                                    }
-                                })
-                                ->searchable()
-                                ->required()
-                                ->searchPrompt('Tìm theo tên hoặc mã căn hộ')
-                                ->label('Tên căn hộ'),
-
-                            Select::make('customer_id')
-                                ->options(fn (Get $get): Collection => $this->customers->pluck('ho_va_ten', 'id'))
-                                ->live()
-                                ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
-                                    $this->utility_types = collect();
-                                    if ($get('building_id')) {
-                                        $this->utility_types = UtilityType::whereHas('utilities', function ($query) use ($get) {
-                                            $query->whereHas('building', function ($query) use ($get) {
-                                                $query->where('id', $get('building_id'));
-                                            });
-                                        })->get();
-                                        if ($this->utility_types->count() > 0) {
-                                            $set('utility_type_id', null);
-                                            $set('utility_id', null);
-                                        }
-                                    }
-                                })
-                                ->searchable()
-                                ->required()
-                                ->searchPrompt('Tìm theo tên chủ hộ hoặc người được ủy quyền')
-                                ->label('Người đăng ký'),
-                        ])
-                        ->label('Căn hộ')
-                        ->columns(2),
-                    Wizard\Step::make('UtilityType')
-                        ->schema([
-                            Select::make('utility_type_id')
-                                ->options(fn (Get $get): Collection => $this->utility_types->pluck('ten_loai_tien_ich', 'id'))
-                                ->live()
-                                ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
-                                    $this->utilities = collect();
-                                    if ($get('utility_type_id')) {
-                                        $this->utilities = Utility::withWhereHas('building', function ($query) use ($get) {
+                                    $this->utility_types = UtilityType::whereHas('utilities', function ($query) use ($get) {
+                                        $query->whereHas('building', function ($query) use ($get) {
                                             $query->where('id', $get('building_id'));
-                                            $query->whereHas('apartments', function ($query) {
-                                            });
-                                        })->where('cho_phep_dang_ky', true)->where('active', true)->where('utility_type_id', $get('utility_type_id'))->get();
+                                        });
+                                    })->get();
+                                    //dd($this->apartments, $this->utility_types);
+                                    if ($this->apartments->count() > 0) {
+                                        $set('apartment_id', null);
                                     }
-
-                                    if ($this->utilities->count() > 0) {
+                                    if ($this->utility_types->count() > 0) {
+                                        $set('utility_type_id', null);
                                         $set('utility_id', null);
                                     }
-                                })
-                                ->searchable()
-                                ->required()
-                                ->searchPrompt('Tìm theo loại tiện ích')
-                                ->label('Loại tiện ích')
-                                ->columnSpan(1),
+                                }
+                            })
+                            ->searchable()
+                            ->required()
+                            ->searchPrompt('Tìm theo tên chung cư')
+                            ->label('Tên chung cư')
+                            ->columnSpan(2),
 
-                            Select::make('utility_id')
-                                ->options(fn (Get $get): Collection => $this->utilities->where('building_id', $get('building_id'))->where('utility_type_id', $get('utility_type_id'))->pluck('ten_tien_ich', 'id'))
-                                ->searchable()
-                                ->required()
-                                ->searchPrompt('Tìm theo tên tiện ích')
-                                ->label('Tiện ích')
-                                ->live()
-                        ])
-                        ->label('Tiện ích')
-                        ->columns(2),
-                ])
-                    ->nextAction(
-                        fn (Action $action) => $action->label('Tiếp'),
-                    )
-                    ->startOnStep($this->step),
+                        Select::make('apartment_id')
+                            ->options(fn (Get $get): Collection =>  $this->apartments->where('building_id', $get('building_id'))->pluck('ma_can_ho', 'id'))
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
+                                $this->customers = collect();
+                                $this->utility_types = collect();
+                                if ($get('building_id')) {
+                                    $this->customers = Customer::whereHas('owns', function ($query) use ($get) {
+                                        $query->where('apartments.id', $get('apartment_id'));
+                                    })->orWhereHas('authorizedPersons', function ($query) use ($get) {
+                                        $query->where('apartments.id', $get('apartment_id'));
+                                    })->get();
+                                    $this->utility_types = UtilityType::whereHas('utilities', function ($query) use ($get) {
+                                        $query->whereHas('building', function ($query) use ($get) {
+                                            $query->where('id', $get('building_id'));
+                                        });
+                                    })->get();
+                                    //dd($this->customers);
+                                    if ($this->customers->count() > 0) {
+                                        $set('customer_id', null);
+                                    }
+                                    if ($this->utility_types->count() > 0) {
+                                        $set('utility_type_id', null);
+                                        $set('utility_id', null);
+                                    }
+                                }
+                            })
+                            ->searchable()
+                            ->required()
+                            ->searchPrompt('Tìm theo tên hoặc mã căn hộ')
+                            ->label('Tên căn hộ'),
 
-                Fieldset::make('date')
-                    ->label('')
-                    ->schema([
-                        TextInput::make('customer_id'),
-                        TextInput::make('utility_id'),
+                        Select::make('customer_id')
+                            ->options(fn (Get $get): Collection => $this->customers->pluck('ho_va_ten', 'id'))
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
+                                $this->utility_types = collect();
+                                if ($get('building_id')) {
+                                    $this->utility_types = UtilityType::whereHas('utilities', function ($query) use ($get) {
+                                        $query->whereHas('building', function ($query) use ($get) {
+                                            $query->where('id', $get('building_id'));
+                                        });
+                                    })->get();
+                                    if ($this->utility_types->count() > 0) {
+                                        $set('utility_type_id', null);
+                                        $set('utility_id', null);
+                                    }
+                                }
+                            })
+                            ->searchable()
+                            ->required()
+                            ->searchPrompt('Tìm theo tên chủ hộ hoặc người được ủy quyền')
+                            ->label('Người đăng ký'),
+                        Select::make('utility_type_id')
+                            ->options(fn (Get $get): Collection => $this->utility_types->pluck('ten_loai_tien_ich', 'id'))
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
+                                $this->utilities = collect();
+                                if ($get('utility_type_id')) {
+                                    $this->utilities = Utility::withWhereHas('building', function ($query) use ($get) {
+                                        $query->where('id', $get('building_id'));
+                                        $query->whereHas('apartments', function ($query) {
+                                        });
+                                    })->where('cho_phep_dang_ky', true)->where('active', true)->where('utility_type_id', $get('utility_type_id'))->get();
+                                }
+
+                                if ($this->utilities->count() > 0) {
+                                    $set('utility_id', null);
+                                }
+                            })
+                            ->searchable()
+                            ->required()
+                            ->searchPrompt('Tìm theo loại tiện ích')
+                            ->label('Loại tiện ích')
+                            ->columnSpan(1),
+
+                        Select::make('utility_id')
+                            ->options(fn (Get $get): Collection => $this->utilities->where('building_id', $get('building_id'))->where('utility_type_id', $get('utility_type_id'))->pluck('ten_tien_ich', 'id'))
+                            ->searchable()
+                            ->required()
+                            ->searchPrompt('Tìm theo tên tiện ích')
+                            ->label('Tiện ích')
+                            ->live(),
                         DateRangePicker::make('dates')
                             ->setAutoApplyOption(true)
                             ->format('d/m/Y'),
@@ -250,6 +231,14 @@ class UtilityRegistrationPage extends Page
                             ->default(['1', '2', '3', '4', '5', '6', '0'])
                             ->native(false)
                             ->label('Ngày trong tuần'),
+                    ])
+                    ->label('Đăng ký tiện ích'),
+
+                Fieldset::make('date')
+                    ->label('')
+                    ->schema([
+                        TextInput::make('customer_id'),
+                        TextInput::make('utility_id'),
                     ]),
                 //->hidden(fn (Get $get): bool => !$get('utility_id')),
             ]);
@@ -346,7 +335,7 @@ class UtilityRegistrationPage extends Page
             if ($selectedBlocks->count() > 1) {
                 // Cập nhật phiếu thu
                 $this->capNhatPhieuThu($block, $selectedBlocks->count());
-                $this->capNhatNgayDaDangKy();
+                //$this->capNhatNgayDaDangKy();
             } else {
                 // Khởi tạo phiếu thu
                 $this->khoiTaoPhieuThu();
@@ -469,7 +458,7 @@ class UtilityRegistrationPage extends Page
                 return $item;
             });
         }
-
+        $this->capNhatNgayDaDangKy();
         $this->tinhTien();
     }
 
@@ -481,10 +470,12 @@ class UtilityRegistrationPage extends Page
             if ($surcharge['selected']) {
                 foreach ($dates as $key => $date) {
                     $utility = $itemList->firstWhere(function ($item, $key) use ($date) {
-                        return $item['loai'] === 'Utility' && $item['ngay']->eq(Carbon::parse($date));
+                        return $item['loai'] === 'Utility' && $item['ngay']->isSameDay(Carbon::parse($date));
                     });
                     $key = Str::random();
-                    $this->selectedItems[$month][] = $key;
+                    if (!$utility['registered']) {
+                        $this->selectedItems[$month][] = $key;
+                    }
                     $quantity = $surcharge['thu_theo_block'] ? $utility['so_luong'] : 1;
                     $price = $surcharge['muc_thu'];
                     if (!$surcharge['co_dinh']) {
@@ -504,6 +495,7 @@ class UtilityRegistrationPage extends Page
                         'loai' => 'Surcharge',
                         'selected' => $utility['selected'],
                         'disabled' => $utility['disabled'],
+                        'registered' => $utility['registered'],
                     ]);
                 }
             } else {
@@ -524,7 +516,7 @@ class UtilityRegistrationPage extends Page
         $trangThai = !$item['selected'];
         if ($item['loai'] === 'Utility') {
             $this->invoiceables[$month]->transform(function ($item, $key) use ($ngayDangKy, $trangThai) {
-                if ($item['ngay']->eq($ngayDangKy)) {
+                if ($item['ngay']->isSameDay($ngayDangKy)) {
                     $item['selected'] = $trangThai;
                 }
                 return $item;
@@ -565,7 +557,7 @@ class UtilityRegistrationPage extends Page
     public function ngayDaDangKy($date, $start, $end)
     {
         return Registration::withWhereHas('utilities', function ($query) use ($date, $start, $end) {
-            $query->where('thoi_gian', $date)->where('thoi_gian_bat_dau', $start)->where('thoi_gian_ket_thuc', $end);
+            $query->whereDate('thoi_gian', Carbon::parse($date)->toDateString())->where('thoi_gian_bat_dau', $start)->where('thoi_gian_ket_thuc', $end);
         })->count();
     }
 
@@ -575,20 +567,19 @@ class UtilityRegistrationPage extends Page
             return $value['selected'];
         });
         foreach ($this->invoiceables as $month => $itemList) {
-            $items = collect();
+            $registeredList = collect();
             foreach ($blockDaChon as $key => $block) {
-                $registered = $itemList->transform(function ($item, $key) use ($block) {
+                $itemList->transform(function ($item, $key) use ($block) {
                     $registered = $this->ngayDaDangKy($item['ngay'], $block['start'], $block['end']) > 0;
                     $item['registered'] = $registered;
                     return $item;
-                })->filter(function ($value, $key) {
-                    return $value['registered'];
                 });
-                $items = $itemList->merge($registered);
+                $registeredList = $itemList->whereIn('registered', true);
             }
+            $items = $itemList->merge($registeredList);
             $this->invoiceables->put($month, $items);
-            //dd($this->invoiceables, $registered, $items);
         }
+        dd($items, $registeredList, $this->invoiceables, $registeredList);
     }
 
     public function store()
