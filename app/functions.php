@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
+use Filament\Notifications\Notification;
 
 if (!function_exists('can')) {
     /**

@@ -97,7 +97,7 @@
                                     <input type="checkbox" wire:key="{{ $itemKey }}" wire:model.live="selectedItems.{{ $month }}" wire:click="xuLyDangKyTienIch('{{ $month }}', '{{ $itemKey }}')" value="{{ $itemKey }}" class="absolute left-0 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 {{ $item['bat_buoc'] ? 'text-gray-300' : 'text-indigo-600' }}" {{ $item['bat_buoc'] || $item['disabled'] ? 'disabled' : '' }}>
                                 </td>
                                 <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ $item['ngay']->format('d/m/Y') }}</td>
-                                <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ $item['mo_ta'] }} {{ $item['registered'] }}</td>
+                                <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ $item['mo_ta'] }} - registered:{{ $item['registered'] }}</td>
                                 <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ $item['so_luong'] }}</td>
                                 <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ moneyFormat($item['muc_thu']) }}{{ $item['co_dinh'] ? 'đ' : '%' }}</td>
                                 <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ moneyFormat($item['thanh_tien']) }}đ</td>
@@ -133,11 +133,6 @@
                         Số lần đăng ký còn lại trong tháng <span class='text-sky-700 text-lg'>{{ $remainingTimes }}</span>
                         <br>
                     @endif
-                    {{--  Phí đăng ký: <span class="text-sky-700">{{ number_format($totalBlockAmountByMonth) }}đ</span>
-                    <br>
-                    Phí phụ thu: <span class="text-sky-700">{{ number_format($totalSurchargeAmountByMonth) }}đ</span>
-                    <br>
-                    Tổng tiền: <span class="text-sky-700">{{ number_format($totalBlockAmountByMonth + $totalSurchargeAmountByMonth) }}đ</span>  --}}
                 </div>
             </div>
         </div>

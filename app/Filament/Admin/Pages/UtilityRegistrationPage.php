@@ -16,17 +16,11 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Models\Registration;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Wizard;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Wizard\Step;
-use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 
@@ -55,13 +49,10 @@ class UtilityRegistrationPage extends Page
     public ?string $utility_id;
     public ?string $registration_date;
     public float $remainingTimes = 0;
-    public float $amount = 0;
 
     public $dates;
     public $week;
     public $selectedSurcharges = [];
-    public $groupDatesByMonth = [];
-    public $registrationUtilityItem = [];
 
     public ?Collection $buildings;
     public ?Collection $apartments;
@@ -72,7 +63,6 @@ class UtilityRegistrationPage extends Page
     public ?Collection $blocks;
     public ?Collection $invoiceables;
     public ?Collection $invoices;
-    public ?Collection $selectedBlocks;
     public $surchargeList = [];
 
     public $selectedItems = [];
@@ -276,7 +266,7 @@ class UtilityRegistrationPage extends Page
     {
         $this->remainingTimes = 0;
         if ($this->utility->gioi_han > 0) {
-            $registrationCount = Registration::where('apartment_id', $this->apartment_id)->count();
+            $registrationCount = Registration::where('apartment_id', $this->apartment_id)->whereBetween('thoi_gian_dang_ky', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->pluck('thoi_gian_dang_ky')->unique()->count();
             $this->remainingTimes = $this->utility->gioi_han - $registrationCount;
         }
     }
@@ -394,9 +384,9 @@ class UtilityRegistrationPage extends Page
                             'thu_theo_block' => true,
                             'bat_buoc' => false,
                             'loai' => 'Utility',
-                            'selected' => true,
-                            'disabled' => false,
-                            'registered' => $registered ?? false,
+                            'selected' => !$registered,
+                            'disabled' => $registered,
+                            'registered' => $registered,
                         ]);
                         foreach ($phuThuBatBuoc as $surcharge) {
                             $key = Str::random();
@@ -418,16 +408,16 @@ class UtilityRegistrationPage extends Page
                                 'thu_theo_block' => $surcharge->thu_theo_block,
                                 'bat_buoc' => $surcharge->bat_buoc,
                                 'loai' => 'Surcharge',
-                                'selected' => true,
-                                'disabled' => false,
-                                'registered' => $registered ?? false,
+                                'selected' => !$registered,
+                                'disabled' => $registered,
+                                'registered' => $registered,
                             ]);
                         }
                     }
                 }
                 $this->invoiceables->put($month, $itemList)->toArray();
             }
-            //dd($this->selectedItems);
+            //dd($this->selectedItems, $this->invoiceables);
         }
         $this->tinhTien();
     }
@@ -549,7 +539,7 @@ class UtilityRegistrationPage extends Page
             $this->invoices->put($month, [
                 'phi_dang_ky' => $phiDangKy,
                 'phi_phu_thu' => $phiPhuThu,
-                'tong_tien' => $tongTien
+                'tong_tien' => $tongTien,
             ]);
         }
     }
@@ -568,67 +558,110 @@ class UtilityRegistrationPage extends Page
         });
         foreach ($this->invoiceables as $month => $itemList) {
             $registeredList = collect();
+            $registrationList = collect();
             foreach ($blockDaChon as $key => $block) {
                 $itemList->transform(function ($item, $key) use ($block) {
                     $registered = $this->ngayDaDangKy($item['ngay'], $block['start'], $block['end']) > 0;
                     $item['registered'] = $registered;
+                    $item['disabled'] = $registered;
+                    //$item['selected'] = !$registered;
                     return $item;
                 });
-                $registeredList = $itemList->whereIn('registered', true);
+                $registeredList = $registeredList->merge($itemList->whereIn('registered', true));
+                $registrationList = $registrationList->merge($itemList->whereIn('registered', false));
             }
             $items = $itemList->merge($registeredList);
             $this->invoiceables->put($month, $items);
+            $selectedItems = $this->invoiceables[$month]->filter(function ($item, $key) {
+                return $item['registered'] === false;
+            })->keys();
+            $this->selectedItems[$month] = $selectedItems;
         }
-        dd($items, $registeredList, $this->invoiceables, $registeredList);
+        //dd($registrationList, $this->invoiceables, $registeredList);
     }
 
     public function store()
     {
-        //dd($this->invoices, $this->invoiceables);
-        $blockDaChon = $this->blocks->filter(function ($value, $key) {
-            return $value['selected'];
-        });
-        foreach ($this->invoiceables as $month => $itemList) {
-            $danhSachTienIch = $itemList->filter(function ($value, $key) {
-                return $value['selected'] && $value['loai'] === 'Utility';
+        if (($this->remainingTimes > 0 || $this->utility->max_times == 0)) {
+            $blockDaChon = $this->blocks->filter(function ($value, $key) {
+                return $value['selected'];
             });
-            $danhSachPhuThu = $itemList->filter(function ($value, $key) {
-                return $value['selected'] && $value['loai'] === 'Surcharge';
-            });
-            $registration = Registration::create([
-                'apartment_id' => $this->apartment_id,
-                'customer_id' => $this->customer_id,
-                'thoi_gian_dang_ky' => now(),
-                'mo_ta' => ucfirst(strtolower("Đăng ký tiện ích {$this->utility->utilityType->ten_loai_tien_ich} ({$this->utility->ten_tien_ich})")),
-                'phi_dang_ky' => $this->invoices[$month]['phi_dang_ky'],
-                'phu_thu' => $this->invoices[$month]['phi_phu_thu'],
-                'tong_tien' => $this->invoices[$month]['tong_tien'],
-                'da_thanh_toan' => false,
-            ]);
-            foreach ($danhSachTienIch as $utility) {
-                foreach ($blockDaChon as $block) {
-                    //dd($utility, $block);
-                    $registration->utilities()->attach($utility['id'], [
-                        'thoi_gian' => $utility['ngay'],
-                        'mo_ta' => $utility['mo_ta'],
-                        'thoi_gian_bat_dau' => $block['start'],
-                        'thoi_gian_ket_thuc' => $block['end'],
-                        'so_luong' => 1,
-                        'muc_thu' => $block['price'],
-                        'thanh_tien' => $block['price'],
-                    ]);
+            $registedInvoiceable = 0;
+            foreach ($this->invoiceables as $month => $itemList) {
+                $utilities = [];
+                $danhSachTienIch = $itemList->filter(function ($value, $key) {
+                    return $value['selected'] && !$value['registered'] && $value['loai'] === 'Utility';
+                });
+                $danhSachPhuThu = $itemList->filter(function ($value, $key) {
+                    return $value['selected'] && !$value['registered'] && $value['loai'] === 'Surcharge';
+                });
+                $invoices = $this->invoices->filter(function ($value, $key) use ($month) {
+                    return $key == $month;
+                });
+                //dd($invoices[$month]['tong_tien']);
+                if ($danhSachTienIch && $danhSachTienIch->count() > 0 && $invoices) {
+                    foreach ($danhSachTienIch as $utility) {
+                        foreach ($blockDaChon as $block) {
+                            $registedInvoiceable = $this->ngayDaDangKy($utility['ngay'], $block['start'], $block['end']);
+                            if ($registedInvoiceable > 0) {
+                                $this->resetUtility();
+                                Notification::make()->title('Đã có người đăng ký thời gian này')->danger()->send();
+                                //dd($utility, $registedInvoiceable, true);
+                                break 3;
+                            } else {
+                                //dd($registedInvoiceable);
+                                $utilities[] = [
+                                    'thoi_gian' => $utility['ngay'],
+                                    'mo_ta' => $utility['mo_ta'],
+                                    'thoi_gian_bat_dau' => $block['start'],
+                                    'thoi_gian_ket_thuc' => $block['end'],
+                                    'so_luong' => 1,
+                                    'muc_thu' => $block['price'],
+                                    'thanh_tien' => $block['price'],
+                                ];
+                            }
+                            //dd($utility, $registedInvoiceable, $this->invoices);
+                        }
+                    }
+                    if ($utilities && count($utilities) > 0 && $invoices) {
+                        $registration = Registration::create([
+                            'apartment_id' => $this->apartment_id,
+                            'customer_id' => $this->customer_id,
+                            'thoi_gian_dang_ky' => now(),
+                            'mo_ta' => ucfirst(strtolower("Đăng ký tiện ích {$this->utility->utilityType->ten_loai_tien_ich} ({$this->utility->ten_tien_ich})")),
+                            'phi_dang_ky' => $invoices[$month]['phi_dang_ky'],
+                            'phu_thu' => $invoices[$month]['phi_phu_thu'],
+                            'tong_tien' => $invoices[$month]['tong_tien'],
+                            'da_thanh_toan' => false,
+                        ]);
+                        for ($i = 0; $i < count($utilities); $i++) {
+                            $registration->utilities()->attach($this->utility_id, $utilities[$i]);
+                        }
+                        foreach ($danhSachPhuThu as $surcharge) {
+                            $registration->surcharges()->attach($surcharge['id'], [
+                                'thoi_gian' => $surcharge['ngay'],
+                                'mo_ta' => $surcharge['mo_ta'],
+                                'so_luong' => $surcharge['so_luong'],
+                                'muc_thu' => $surcharge['muc_thu'],
+                                'thanh_tien' => $surcharge['thanh_tien'],
+                            ]);
+                        }
+                    }
+                } else {
+                    continue;
                 }
             }
-            foreach ($danhSachPhuThu as $surcharge) {
-                $registration->surcharges()->attach($surcharge['id'], [
-                    'thoi_gian' => $surcharge['ngay'],
-                    'mo_ta' => $surcharge['mo_ta'],
-                    'so_luong' => $surcharge['so_luong'],
-                    'muc_thu' => $surcharge['muc_thu'],
-                    'thanh_tien' => $surcharge['thanh_tien'],
-                ]);
+            if ($registedInvoiceable == 0) {
+                $this->resetUtility();
+                Notification::make()
+                    ->title('Đăng kí thành công')
+                    ->success()
+                    ->send();
             }
+        } else {
+            $this->resetUtility();
+            Notification::make()->title('Đã hết lượt đăng ký')->danger()->send();
         }
-        dd($registration);
+        //dd($registration);
     }
 }

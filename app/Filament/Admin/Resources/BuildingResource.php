@@ -23,6 +23,7 @@ use App\Filament\Admin\Resources\UtilityResource;
 use App\Extend\Filament\Columns\ChildResourceLink;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\BuildingResource\Pages;
+use App\Extend\Filament\Table\Actions\LinkToChildrenAction;
 use App\Filament\Admin\Resources\BuildingResource\RelationManagers;
 
 class BuildingResource extends Resource
@@ -98,6 +99,7 @@ class BuildingResource extends Resource
                 //
             ])
             ->actions([
+                //LinkToChildrenAction::make(UtilityResource::class)->forChildResource(UtilityResource::class)->label('Hệ thống'),
                 Action::make('apartments')
                     ->url(fn (Building $record): string => ApartmentResource::getUrl('index', ['building' => $record->id]))
                     ->openUrlInNewTab()
@@ -105,7 +107,7 @@ class BuildingResource extends Resource
                     ->icon('heroicon-s-home')
                     ->color('success'),
                 Action::make('utilities')
-                    ->url(fn (Building $record): string => UtilityResource::getUrl('index', ['building' => $record->id]))
+                    ->url(fn (Building $record): string => UtilityResource::getUrl('index', ['building' => $record]))
                     ->openUrlInNewTab()
                     ->label('Tiện ích')
                     ->icon('bi-columns-gap')

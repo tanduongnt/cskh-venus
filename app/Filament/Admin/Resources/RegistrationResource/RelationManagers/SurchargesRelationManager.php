@@ -47,7 +47,7 @@ class SurchargesRelationManager extends RelationManager
                     return $state;
                 })->label('Mức thu'),
                 TextColumn::make('thanh_tien')->formatStateUsing(fn (string $state): string => moneyFormat($state).'đ')->label('Thành tiền'),
-            ])
+            ])->defaultSort('thoi_gian')
             ->filters([
                 //
             ])
