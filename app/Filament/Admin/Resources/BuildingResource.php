@@ -92,7 +92,7 @@ class BuildingResource extends Resource
                 TextColumn::make('apartments_count')->counts('apartments')->label('Căn hộ')->sortable(),
                 TextColumn::make('utilities_count')->counts('utilities')->label('Tiện ích')->sortable(),
                 IconColumn::make('active')->boolean()->label('Vận hành'),
-                //ChildResourceLink::make(UtilityResource::class)->label('Hệ thống'),
+                //ChildResourceLink::make(ApartmentResource::class)->label('Hệ thống'),
             ])
             ->emptyStateHeading('Chưa có dữ liệu')
             ->filters([
@@ -107,7 +107,7 @@ class BuildingResource extends Resource
                     ->icon('heroicon-s-home')
                     ->color('success'),
                 Action::make('utilities')
-                    ->url(fn (Building $record): string => UtilityResource::getUrl('index', ['building' => $record]))
+                    ->url(fn (Building $record): string => UtilityResource::getUrl('index', ['building' => $record->id]))
                     ->openUrlInNewTab()
                     ->label('Tiện ích')
                     ->icon('bi-columns-gap')

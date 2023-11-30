@@ -113,7 +113,7 @@ class ApartmentResource extends NestedResource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\CustomersRelationManager::class
+            //RelationManagers\CustomersRelationManager::class
         ];
     }
 

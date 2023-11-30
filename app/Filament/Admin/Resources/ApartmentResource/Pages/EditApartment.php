@@ -3,9 +3,11 @@
 namespace App\Filament\Admin\Resources\ApartmentResource\Pages;
 
 use Filament\Actions;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Pages\EditRecord;
-use App\Filament\Admin\Resources\ApartmentResource;
 use App\Extend\Filament\ResourcePages\NestedPage;
+use App\Filament\Admin\Resources\ApartmentResource;
 
 class EditApartment extends EditRecord
 {
@@ -16,13 +18,5 @@ class EditApartment extends EditRecord
     protected function getRedirectUrl(): string
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');
-    }
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\ViewAction::make(),
-            Actions\DeleteAction::make(),
-        ];
     }
 }

@@ -17,11 +17,4 @@ class EditUtility extends EditRecord
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');
     }
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\DeleteAction::make(),
-        ];
-    }
 }
