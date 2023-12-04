@@ -325,7 +325,7 @@ class UtilityRegistrationPage extends Page
             if ($selectedBlocks->count() > 1) {
                 // Cập nhật phiếu thu
                 //$this->capNhatPhieuThu($block, $selectedBlocks->count());
-                $this->capNhatPhieuThuNhieuBlock($block);
+                $this->capNhatPhieuThuNhieuBlock($block, $selectedBlocks->count());
                 //$this->capNhatNgayDaDangKy();
             } else {
                 // Khởi tạo phiếu thu
@@ -377,7 +377,9 @@ class UtilityRegistrationPage extends Page
                         $itemList->put($key, [
                             'id' => $this->utility_id,
                             'ngay' => Carbon::parse($date),
-                            'mo_ta' =>  "Từ {$block['start']} đến {$block['end']}",
+                            'mo_ta' =>  "Từ {$block['start']->toTimeString()} đến {$block['end']->toTimeString()}",
+                            'bat_dau' => $block['start']->toTimeString(),
+                            'ket_thuc' => $block['end']->toTimeString(),
                             'so_luong' => 1,
                             'muc_thu' =>  $this->utility->don_gia,
                             'thanh_tien' => $block['price'],
@@ -402,6 +404,8 @@ class UtilityRegistrationPage extends Page
                                 'id' => $surcharge->id,
                                 'ngay' => Carbon::parse($date),
                                 'mo_ta' => $surcharge->ten_phu_thu,
+                                'bat_dau' => '',
+                                'ket_thuc' => '',
                                 'so_luong' => 1,
                                 'muc_thu' => $surcharge->muc_thu,
                                 'thanh_tien' => $price,
@@ -452,9 +456,8 @@ class UtilityRegistrationPage extends Page
         $this->tinhTien();
     }
 
-    public function capNhatPhieuThuNhieuBlock($block)
+    public function capNhatPhieuThuNhieuBlock($block, $count)
     {
-        //dd($block, $this->selectedItems, $this->invoiceables);
         foreach ($this->invoiceables as $month => $itemList) {
             $dates = $itemList->pluck('ngay')->unique();
             foreach ($dates as $key => $date) {
@@ -463,38 +466,65 @@ class UtilityRegistrationPage extends Page
                 if (!$registered) {
                     $this->selectedItems[$month][] = $key;
                 }
-                $itemList->put($key, [
-                    'id' => $this->utility_id,
-                    'ngay' => Carbon::parse($date),
-                    'mo_ta' => "Từ {$block['start']} đến {$block['end']}",
-                    'so_luong' => 1,
-                    'muc_thu' => $this->utility->don_gia,
-                    'thanh_tien' => $block['price'],
-                    'co_dinh' => true,
-                    'thu_theo_block' => true,
-                    'bat_buoc' => false,
-                    'loai' => 'Utility',
-                    'selected' => !$registered,
-                    'disabled' => $registered,
-                    'registered' => $registered,
-                ]);
+                if ($block['selected']) {
+                    $itemList->put($key, [
+                        'id' => $this->utility_id,
+                        'ngay' => Carbon::parse($date),
+                        'mo_ta' => "Từ {$block['start']->toTimeString()} đến {$block['end']->toTimeString()}",
+                        'bat_dau' => $block['start']->toTimeString(),
+                        'ket_thuc' => $block['end']->toTimeString(),
+                        'so_luong' => 1,
+                        'muc_thu' => $this->utility->don_gia,
+                        'thanh_tien' => $block['price'],
+                        'co_dinh' => true,
+                        'thu_theo_block' => true,
+                        'bat_buoc' => false,
+                        'loai' => 'Utility',
+                        'selected' => !$registered,
+                        'disabled' => $registered,
+                        'registered' => $registered,
+                    ]);
+                } else {
+                    $itemList = $itemList->reject(function ($value, $key) use ($block) {
+                        return $value['bat_dau'] === $block['start']->toTimeString() && $value['ket_thuc'] === $block['end']->toTimeString();
+                    });
+                    $this->invoiceables->put($month, $itemList);
+                }
+                $itemListTheoLoaiTienIchNhomTheoNgay = $itemList->filter(function ($item, $key) {
+                    return $item['loai'] === 'Utility' && $item['selected'];
+                })->groupBy(function ($item, $key) {
+                    return $item['ngay']->format('d-m-Y');
+                });
+                $itemListTheoLoaiTienIchNhomTheoNgay->transform(function ($item) {
+                    $item['tong_so_luong'] = $item->sum('so_luong');
+                    $item['tong_tien'] = $item->sum('thanh_tien');
+                    return $item;
+                });
             }
             $ngayDangKy = $this->invoiceables[$month]->filter(function ($item, $key) {
                 return $item['loai'] === 'Utility' && $item['selected'];
             })->pluck('ngay')->unique();
             $selected = $this->invoiceables[$month]->whereIn('ngay', $ngayDangKy);
-            $selected->transform(function ($item, $key) use ($month) {
+            //dd($ngayDangKy, $selected);
+            $selected->transform(function ($item, $key) use ($month, $count, $itemListTheoLoaiTienIchNhomTheoNgay, $block) {
                 if ($item['loai'] === 'Surcharge') {
                     $this->selectedItems[$month][] = $key;
                     $item['selected'] = true;
                     $item['disabled'] = false;
                     $item['registered'] = false;
+                    $quantity = $item['thu_theo_block'] ? $itemListTheoLoaiTienIchNhomTheoNgay[$item['ngay']->format('d-m-Y')]['tong_so_luong'] : 1;
+                    $price = $item['muc_thu'];
+                    if (!$item['co_dinh']) {
+                        $price = $itemListTheoLoaiTienIchNhomTheoNgay[$item['ngay']->format('d-m-Y')]['tong_tien'] * $item['muc_thu'] / 100;
+                    }
+                    $amount = $quantity * $price;
+                    $item['so_luong'] = $quantity;
+                    $item['thanh_tien'] = $amount;
                 }
                 return $item;
             });
             $this->invoiceables[$month] = $this->invoiceables[$month]->merge($selected);
         }
-        //dd($itemList, $selected, $ngayDangKy, $this->selectedItems, $this->invoiceables);
         // $this->capNhatNgayDaDangKy();
         $this->tinhTien();
     }
@@ -502,27 +532,36 @@ class UtilityRegistrationPage extends Page
     public function xuLyPhuThuKhongBatBuoc($surcharge)
     {
         // lấy danh sách đăng ký theo tháng
+        $utility = [];
         foreach ($this->invoiceables as $month => $itemList) {
             $dates = $itemList->pluck('ngay')->unique();
             if ($surcharge['selected']) {
                 foreach ($dates as $key => $date) {
                     $utility = $itemList->firstWhere(function ($item, $key) use ($date) {
-                        return $item['loai'] === 'Utility' && $item['ngay']->isSameDay(Carbon::parse($date));
+                        return $item['selected'] && $item['loai'] === 'Utility' && $item['ngay']->isSameDay(Carbon::parse($date));
                     });
+                    $surchargeList = $itemList->firstWhere(function ($item, $key) use ($date) {
+                        return $item['loai'] === 'Surcharge' && $item['bat_buoc'] && $item['ngay']->isSameDay(Carbon::parse($date));
+                    });
+                    $tongTien = $itemList->filter(function ($item, $key) use ($date) {
+                        return $item['selected'] && $item['loai'] === 'Utility' && $item['ngay']->isSameDay(Carbon::parse($date));
+                    })->sum('thanh_tien');
                     $key = Str::random();
-                    if (!$utility['registered']) {
+                    if ($utility != null && !$utility['registered']) {
                         $this->selectedItems[$month][] = $key;
                     }
-                    $quantity = $surcharge['thu_theo_block'] ? $utility['so_luong'] : 1;
+                    $quantity = $surcharge['thu_theo_block'] ? $surchargeList['so_luong'] : 1;
                     $price = $surcharge['muc_thu'];
                     if (!$surcharge['co_dinh']) {
-                        $price = $utility['thanh_tien'] * $surcharge['muc_thu'] / 100;
+                        $price = $tongTien * $surcharge['muc_thu'] / 100;
                     }
                     $amount = $quantity * $price;
                     $itemList->put($key, [
                         'id' => $surcharge['id'],
                         'ngay' => Carbon::parse($date),
                         'mo_ta' => $surcharge['ten_phu_thu'],
+                        'bat_dau' => '',
+                        'ket_thuc' => '',
                         'so_luong' => $quantity,
                         'muc_thu' => $surcharge['muc_thu'],
                         'thanh_tien' => $amount,
@@ -530,9 +569,9 @@ class UtilityRegistrationPage extends Page
                         'thu_theo_block' => $surcharge['thu_theo_block'],
                         'bat_buoc' => $surcharge['bat_buoc'],
                         'loai' => 'Surcharge',
-                        'selected' => $utility['selected'],
-                        'disabled' => $utility['disabled'],
-                        'registered' => $utility['registered'],
+                        'selected' => $surchargeList['selected'],
+                        'disabled' => $surchargeList['disabled'],
+                        'registered' => $surchargeList['registered'],
                     ]);
                 }
             } else {
@@ -552,9 +591,9 @@ class UtilityRegistrationPage extends Page
         $ngayDangKy = $item['ngay'];
         $trangThai = !$item['selected'];
         $count = $this->invoiceables[$month]->filter(function ($value, $key) use ($ngayDangKy) {
-            return $value['selected'] === true && $value['ngay']->isSameDay($ngayDangKy) && $value['loai'] === 'Utility';
+            return $value['selected'] === true && !$value['registered'] && $value['ngay']->isSameDay($ngayDangKy) && $value['loai'] === 'Utility';
         })->count();
-        //dd($count, $item, $this->invoiceables[$month]);
+        //dd($count, $tongTien, $item, $this->invoiceables[$month]);
         if ($item['loai'] === 'Utility') {
             $this->invoiceables[$month]->transform(function ($item, $key) use ($ngayDangKy, $trangThai, $count, $itemKey) {
                 if ($count > 1) {
@@ -563,7 +602,7 @@ class UtilityRegistrationPage extends Page
                     }
                 } else {
                     if ($item['ngay']->isSameDay($ngayDangKy)) {
-                        $item['selected'] = $trangThai;
+                        $item['selected'] = !$item['registered'] ? $trangThai : !$item['registered'];
                     }
                 }
                 return $item;
@@ -649,7 +688,7 @@ class UtilityRegistrationPage extends Page
             foreach ($this->invoiceables as $month => $itemList) {
                 $utilities = [];
                 $danhSachTienIch = $itemList->filter(function ($value, $key) {
-                    return $value['selected'] && !$value['registered'] && $value['loai'] === 'Utility';
+                    return $value['loai'] === 'Utility' && $value['selected'] && !$value['registered'];
                 });
                 $danhSachPhuThu = $itemList->filter(function ($value, $key) {
                     return $value['selected'] && !$value['registered'] && $value['loai'] === 'Surcharge';
@@ -659,23 +698,23 @@ class UtilityRegistrationPage extends Page
                 });
                 if ($danhSachTienIch && $danhSachTienIch->count() > 0 && $invoices) {
                     foreach ($danhSachTienIch as $utility) {
-                        foreach ($blockDaChon as $block) {
-                            $registedInvoiceable = $this->ngayDaDangKy($utility['ngay'], $block['start'], $block['end']);
-                            if ($registedInvoiceable > 0) {
-                                $this->resetUtility();
-                                Notification::make()->title('Đã có người đăng ký thời gian này')->danger()->send();
-                                break 3;
-                            } else {
-                                $utilities[] = [
-                                    'thoi_gian' => $utility['ngay'],
-                                    'mo_ta' => $utility['mo_ta'],
-                                    'thoi_gian_bat_dau' => $block['start'],
-                                    'thoi_gian_ket_thuc' => $block['end'],
-                                    'so_luong' => 1,
-                                    'muc_thu' => $this->utility->don_gia,
-                                    'thanh_tien' => $block['price'],
-                                ];
-                            }
+                        $registedInvoiceable = $this->ngayDaDangKy($utility['ngay'], $utility['bat_dau'], $utility['ket_thuc']);
+                        if ($registedInvoiceable > 0) {
+                            $this->resetUtility();
+                            Notification::make()->title('Đã có người đăng ký thời gian này')->danger()->send();
+                            dd($registedInvoiceable, $utility);
+                            break 2;
+                        } else {
+                            $utilities[] = [
+                                'thoi_gian' => $utility['ngay'],
+                                'mo_ta' => $utility['mo_ta'],
+                                'thoi_gian_bat_dau' => $utility['bat_dau'],
+                                'thoi_gian_ket_thuc' => $utility['ket_thuc'],
+                                'so_luong' => 1,
+                                'muc_thu' => $this->utility->don_gia,
+                                'thanh_tien' => $utility['thanh_tien'],
+                            ];
+                            //dd($utilities, $utility);
                         }
                     }
                     if ($utilities && count($utilities) > 0 && $invoices) {
