@@ -53,6 +53,8 @@ class UtilityRegistrationPage extends Page
     public $dates;
     public $week;
     public $selectedSurcharges = [];
+    public $surchargeList = [];
+    public $selectedItems = [];
 
     public ?Collection $buildings;
     public ?Collection $apartments;
@@ -63,9 +65,6 @@ class UtilityRegistrationPage extends Page
     public ?Collection $blocks;
     public ?Collection $invoiceables;
     public ?Collection $invoices;
-    public $surchargeList = [];
-
-    public $selectedItems = [];
 
     public function mount()
     {
@@ -105,7 +104,6 @@ class UtilityRegistrationPage extends Page
                                             $query->where('id', $get('building_id'));
                                         });
                                     })->get();
-                                    //dd($this->apartments, $this->utility_types);
                                     if ($this->apartments->count() > 0) {
                                         $set('apartment_id', null);
                                     }
@@ -138,7 +136,6 @@ class UtilityRegistrationPage extends Page
                                             $query->where('id', $get('building_id'));
                                         });
                                     })->get();
-                                    //dd($this->customers);
                                     if ($this->customers->count() > 0) {
                                         $set('customer_id', null);
                                     }
@@ -241,12 +238,17 @@ class UtilityRegistrationPage extends Page
         }
     }
 
+    public function updatingDates($date)
+    {
+        dd($this->dates);
+    }
+
     public function resetUtility()
     {
         $this->blocks = collect();
         $this->invoices = collect();
         $this->invoiceables = collect();
-        $this->surchargeList = [];
+        $this->selectedSurcharges = [];
         // array cho wire.model.live để sử dụng checked
         $this->selectedItems = [];
         $this->loadUtility();
@@ -287,7 +289,6 @@ class UtilityRegistrationPage extends Page
                 $enable =  $start_time->lte($block_start) && $end_time->gte($block_end);
                 $chargeableBlock = $charge_start_time->lte($block_start) && $charge_end_time->gte($block_end);
                 $price = ($enable && $chargeableBlock) ? $block_price : 0;
-                //$registered = $this->countBlockRegisted($block_start, $block_end) > 0;
                 $this->blocks->push([
                     'enable'        => $enable,
                     'start'         => $block_start,
@@ -295,21 +296,25 @@ class UtilityRegistrationPage extends Page
                     'chargeable'    => $chargeableBlock,
                     'price'         => $price,
                     'selected'      => $selected ?? false,
-                    'registered'    => $registered ?? false,
                 ]);
             }
-            //dd($this->blocks);
         }
     }
 
     public function layDanhSachPhuThuBatBuoc()
     {
         if ($this->utility?->surcharges) {
+            // Lấy danh sách phụ thu bắt buộc
             $surchargeList = $this->utility->surcharges->transform(function ($item, $key) {
                 $item['selected'] = $item['bat_buoc'];
                 return $item;
-            })->toArray();
-            $this->surchargeList = Arr::keyBy($surchargeList, 'id');
+            });
+            // Lấy danh sách phụ thu được chọn (dùng cho wire.model)
+            $this->selectedSurcharges = $surchargeList->filter(function ($item, $key) {
+                return $item['selected'];
+            })->pluck('id')->toArray();
+            // Lấy danh sách phụ thu theo key là id
+            $this->surchargeList = Arr::keyBy($surchargeList->toArray(), 'id');
         }
     }
 
@@ -324,9 +329,7 @@ class UtilityRegistrationPage extends Page
         if ($selectedBlocks->count() > 0) {
             if ($selectedBlocks->count() > 1) {
                 // Cập nhật phiếu thu
-                //$this->capNhatPhieuThu($block, $selectedBlocks->count());
                 $this->capNhatPhieuThuNhieuBlock($block, $selectedBlocks->count());
-                //$this->capNhatNgayDaDangKy();
             } else {
                 // Khởi tạo phiếu thu
                 $this->khoiTaoPhieuThu();
@@ -355,6 +358,7 @@ class UtilityRegistrationPage extends Page
         $phuThuBatBuoc = $this->utility->surcharges->filter(function ($item, $key) use ($surchargeId) {
             return in_array($item['id'], $surchargeId);
         });
+        // Lấy block được chọn
         $block = $this->blocks->firstWhere(function ($value, $key) {
             return $value['selected'];
         });
@@ -369,11 +373,14 @@ class UtilityRegistrationPage extends Page
                 $itemList = collect();
                 foreach ($datesOfMonth as $date) {
                     if (in_array(Carbon::parse($date)->dayOfWeek, $this->week)) {
+                        // Lấy những ngày đã đăng ký
                         $registered = $this->ngayDaDangKy($date, $block['start'], $block['end']) > 0;
                         $key = Str::random();
                         if (!$registered) {
+                            // Tạo mảng danh sách items (dùng wire.model cho selected)
                             $this->selectedItems[$month][] = $key;
                         }
+                        // Tạo itemList tiện ích
                         $itemList->put($key, [
                             'id' => $this->utility_id,
                             'ngay' => Carbon::parse($date),
@@ -400,6 +407,7 @@ class UtilityRegistrationPage extends Page
                             if (!$surcharge->co_dinh) {
                                 $price = $block['price'] * $surcharge->muc_thu / 100;
                             }
+                            // Tạo itemList phụ thu
                             $itemList->put($key, [
                                 'id' => $surcharge->id,
                                 'ngay' => Carbon::parse($date),
@@ -426,36 +434,6 @@ class UtilityRegistrationPage extends Page
         $this->tinhTien();
     }
 
-    public function capNhatPhieuThu($block, $count)
-    {
-        // Tổng tiền block được chọn
-        $tongTien = $this->blocks->filter(function ($value, $key) {
-            return $value['selected'];
-        })->sum('price');
-        // Cập nhật tiền đăng ký
-        foreach ($this->invoiceables as $month => $itemList) {
-            $itemList->transform(function ($item, $key) use ($block, $count, $tongTien) {
-                $amount = 0;
-                if ($item['loai'] === 'Utility') {
-                    $item['so_luong'] = $count;
-                    $amount = $tongTien;
-                } else {
-                    $quantity = $item['thu_theo_block'] ? $count : 1;
-                    $price = $item['muc_thu'];
-                    if (!$item['co_dinh']) {
-                        $price = $tongTien * $item['muc_thu'] / 100;
-                    }
-                    $amount = $quantity * $price;
-                    $item['so_luong'] = $quantity;
-                }
-                $item['thanh_tien'] = $amount;
-                return $item;
-            });
-        }
-        $this->capNhatNgayDaDangKy();
-        $this->tinhTien();
-    }
-
     public function capNhatPhieuThuNhieuBlock($block, $count)
     {
         foreach ($this->invoiceables as $month => $itemList) {
@@ -467,6 +445,7 @@ class UtilityRegistrationPage extends Page
                     $this->selectedItems[$month][] = $key;
                 }
                 if ($block['selected']) {
+                    // tạo $itemList theo block đã chọn
                     $itemList->put($key, [
                         'id' => $this->utility_id,
                         'ngay' => Carbon::parse($date),
@@ -485,27 +464,31 @@ class UtilityRegistrationPage extends Page
                         'registered' => $registered,
                     ]);
                 } else {
+                    // Loại bỏ $itemList theo block không chọn nữa
                     $itemList = $itemList->reject(function ($value, $key) use ($block) {
                         return $value['bat_dau'] === $block['start']->toTimeString() && $value['ket_thuc'] === $block['end']->toTimeString();
                     });
                     $this->invoiceables->put($month, $itemList);
                 }
+                // Chọn itemList theo loại tiện ích nhóm theo ngày
                 $itemListTheoLoaiTienIchNhomTheoNgay = $itemList->filter(function ($item, $key) {
                     return $item['loai'] === 'Utility' && $item['selected'];
                 })->groupBy(function ($item, $key) {
                     return $item['ngay']->format('d-m-Y');
                 });
+                // Lấy tổng số lượng và tổng tiền của itemList theo loại tiện ích nhóm theo ngày
                 $itemListTheoLoaiTienIchNhomTheoNgay->transform(function ($item) {
                     $item['tong_so_luong'] = $item->sum('so_luong');
                     $item['tong_tien'] = $item->sum('thanh_tien');
                     return $item;
                 });
             }
+            // Ngày đăng ký
             $ngayDangKy = $this->invoiceables[$month]->filter(function ($item, $key) {
                 return $item['loai'] === 'Utility' && $item['selected'];
             })->pluck('ngay')->unique();
+            // các itemlist thuộc loại phụ thu theo block được chọn
             $selected = $this->invoiceables[$month]->whereIn('ngay', $ngayDangKy);
-            //dd($ngayDangKy, $selected);
             $selected->transform(function ($item, $key) use ($month, $count, $itemListTheoLoaiTienIchNhomTheoNgay, $block) {
                 if ($item['loai'] === 'Surcharge') {
                     $this->selectedItems[$month][] = $key;
@@ -537,12 +520,15 @@ class UtilityRegistrationPage extends Page
             $dates = $itemList->pluck('ngay')->unique();
             if ($surcharge['selected']) {
                 foreach ($dates as $key => $date) {
+                    // Lấy ra itemList  loại tiện ích được chọn theo ngày
                     $utility = $itemList->firstWhere(function ($item, $key) use ($date) {
                         return $item['selected'] && $item['loai'] === 'Utility' && $item['ngay']->isSameDay(Carbon::parse($date));
                     });
+                    // lấy ra itemList phụ thu bắt buộc theo ngày
                     $surchargeList = $itemList->firstWhere(function ($item, $key) use ($date) {
                         return $item['loai'] === 'Surcharge' && $item['bat_buoc'] && $item['ngay']->isSameDay(Carbon::parse($date));
                     });
+                    // Tổng tiền loại tiện ích được chọn theo ngày
                     $tongTien = $itemList->filter(function ($item, $key) use ($date) {
                         return $item['selected'] && $item['loai'] === 'Utility' && $item['ngay']->isSameDay(Carbon::parse($date));
                     })->sum('thanh_tien');
@@ -579,7 +565,6 @@ class UtilityRegistrationPage extends Page
                     return $value['id'] === $surcharge['id'];
                 });
                 $this->invoiceables->put($month, $itemList);
-                //dd($itemList);
             }
         }
         $this->tinhTien();
@@ -590,36 +575,72 @@ class UtilityRegistrationPage extends Page
         $item = $this->invoiceables[$month][$itemKey];
         $ngayDangKy = $item['ngay'];
         $trangThai = !$item['selected'];
+        // Đếm số lượng phiếu thu tiện ích được chọn
         $count = $this->invoiceables[$month]->filter(function ($value, $key) use ($ngayDangKy) {
             return $value['selected'] === true && !$value['registered'] && $value['ngay']->isSameDay($ngayDangKy) && $value['loai'] === 'Utility';
         })->count();
-        //dd($count, $tongTien, $item, $this->invoiceables[$month]);
         if ($item['loai'] === 'Utility') {
-            $this->invoiceables[$month]->transform(function ($item, $key) use ($ngayDangKy, $trangThai, $count, $itemKey) {
+            $this->invoiceables[$month]->transform(function ($value, $key) use ($ngayDangKy, $trangThai, $count, $itemKey) {
                 if ($count > 1) {
                     if ($key === $itemKey) {
-                        $item['selected'] = $trangThai;
+                        $value['selected'] = $trangThai;
                     }
                 } else {
-                    if ($item['ngay']->isSameDay($ngayDangKy)) {
-                        $item['selected'] = !$item['registered'] ? $trangThai : !$item['registered'];
+                    if ($value['ngay']->isSameDay($ngayDangKy)) {
+                        $value['selected'] = !$value['registered'] ? $trangThai : !$value['registered'];
+                        if ($value['loai'] === 'Surcharge' && !$value['bat_buoc']) {
+                            $value['disabled'] = !$value['selected'];
+                        }
                     }
                 }
-                return $item;
+                return $value;
             });
+            $this->xuLyTinhTienPhuThuTheoTienIch($month, $ngayDangKy);
         } else {
-            $this->invoiceables[$month]->transform(function ($item, $key) use ($itemKey, $trangThai) {
+            $this->invoiceables[$month]->transform(function ($value, $key) use ($itemKey, $trangThai) {
                 if ($key === $itemKey) {
-                    $item['selected'] = $trangThai;
+                    $value['selected'] = $trangThai;
                 }
-                return $item;
+                return $value;
             });
         }
-        $selectedItems = $this->invoiceables[$month]->filter(function ($item, $key) {
-            return $item['selected'] === true && $item['registered'] === false;
+        $selectedItems = $this->invoiceables[$month]->filter(function ($value, $key) {
+            return $value['selected'] === true && $value['registered'] === false;
         })->keys()->all();
         $this->selectedItems[$month] = $selectedItems;
         $this->tinhTien();
+    }
+
+    public function xuLyTinhTienPhuThuTheoTienIch($month, $ngayDangKy)
+    {
+        $blockDaChon = $this->blocks->filter(function ($value, $key) {
+            return $value['selected'];
+        });
+        $xuLyPhuThuCuaTienIch = $this->invoiceables[$month]->filter(function ($value, $key) use ($ngayDangKy) {
+            return $value['selected'] === true && !$value['registered'] && $value['ngay']->isSameDay($ngayDangKy) && $value['loai'] === 'Utility';
+        });
+        $count = $xuLyPhuThuCuaTienIch->count();
+        $amount = $xuLyPhuThuCuaTienIch->sum('thanh_tien');
+        $this->invoiceables[$month]->transform(function ($item, $key) use ($ngayDangKy, $count, $amount, $blockDaChon) {
+            if ($count > 0) {
+                $soLuong = $count;
+                $tongTien = $amount;
+            } else {
+                $soLuong = $blockDaChon->count();
+                $tongTien = $blockDaChon->sum('price');
+            }
+            if ($item['ngay']->isSameDay($ngayDangKy) && $item['loai'] === 'Surcharge') {
+                $quantity = $item['thu_theo_block'] ? $soLuong : 1;
+                $price = $item['muc_thu'];
+                if (!$item['co_dinh']) {
+                    $price = $tongTien * $item['muc_thu'] / 100;
+                }
+                $amount = $quantity * $price;
+                $item['so_luong'] = $quantity;
+                $item['thanh_tien'] = $amount;
+            }
+            return $item;
+        });
     }
 
     public function tinhTien()
@@ -647,43 +668,9 @@ class UtilityRegistrationPage extends Page
         })->count();
     }
 
-    public function capNhatNgayDaDangKy()
-    {
-        $blockDaChon = $this->blocks->filter(function ($value, $key) {
-            return $value['selected'];
-        });
-        foreach ($this->invoiceables as $month => $itemList) {
-            $registeredList = collect();
-            $registrationList = collect();
-            foreach ($blockDaChon as $key => $block) {
-                $itemList->transform(function ($item, $key) use ($block) {
-                    $registered = $this->ngayDaDangKy($item['ngay'], $block['start'], $block['end']) > 0;
-                    if ($item['loai'] === 'Utility' && $registered) {
-                        $item['registered'] = $registered;
-                        $item['disabled'] = $registered;
-                    }
-                    //$item['selected'] = !$registered;
-                    return $item;
-                });
-                $registeredList = $registeredList->merge($itemList->whereIn('registered', true));
-                $registrationList = $registrationList->merge($itemList->whereIn('registered', false));
-            }
-            $items = $itemList->merge($registeredList);
-            $this->invoiceables->put($month, $items);
-            $selectedItems = $this->invoiceables[$month]->filter(function ($item, $key) {
-                return $item['registered'] === false;
-            })->keys();
-            $this->selectedItems[$month] = $selectedItems;
-        }
-        //dd($itemList, $blockDaChon);
-    }
-
     public function store()
     {
         if (($this->remainingTimes > 0 || $this->utility->max_times == 0)) {
-            $blockDaChon = $this->blocks->filter(function ($value, $key) {
-                return $value['selected'];
-            });
             $registedInvoiceable = 0;
             foreach ($this->invoiceables as $month => $itemList) {
                 $utilities = [];
@@ -714,7 +701,6 @@ class UtilityRegistrationPage extends Page
                                 'muc_thu' => $this->utility->don_gia,
                                 'thanh_tien' => $utility['thanh_tien'],
                             ];
-                            //dd($utilities, $utility);
                         }
                     }
                     if ($utilities && count($utilities) > 0 && $invoices) {
@@ -756,6 +742,5 @@ class UtilityRegistrationPage extends Page
             $this->resetUtility();
             Notification::make()->title('Đã hết lượt đăng ký')->danger()->send();
         }
-        //dd($registration);
     }
 }

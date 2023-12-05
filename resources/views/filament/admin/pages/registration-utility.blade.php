@@ -58,11 +58,8 @@
                     @foreach ($surchargeList as $surcharge)
                         <tr>
                             <td class="relative w-12 px-2">
-                                <input type="checkbox" wire:key="{{ $surcharge['id'] }}" wire:click="chonPhuThuKhongBatBuoc('{{ $surcharge['id'] }}')" value="{{ $surcharge['id'] }}" @class([
-                                    'absolute left-0 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300',
-                                    'text-indigo-600' => !$surcharge['bat_buoc'],
-                                    'text-gray-300' => $surcharge['bat_buoc'],
-                                ]) {{ $surcharge['bat_buoc'] ? 'disabled' : '' }} {{ $surcharge['selected'] ? 'checked' : '' }}>
+                                <input type="checkbox" wire:key="{{ $surcharge['id'] }}" wire:model.live="selectedSurcharges" wire:click="chonPhuThuKhongBatBuoc('{{ $surcharge['id'] }}')" value="{{ $surcharge['id'] }}"
+                                class = "absolute left-0 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 {{ $surcharge['bat_buoc'] ? 'text-gray-300' : 'text-indigo-600' }}" {{ $surcharge['bat_buoc'] ? 'disabled' : '' }}>
                             </td>
                             <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900 ">{{ $surcharge['ten_phu_thu'] }} {{ $surcharge['selected'] }}</td>
                             <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900 ">{{ moneyFormat($surcharge['muc_thu']) }}{{ $surcharge['co_dinh'] ? 'đ' : '%' }}</td>
