@@ -7,11 +7,6 @@
             <div class="grid grid-cols-4 lg:grid-cols-6 gap-4">
                 @foreach ($blocks as $index => $block)
                     @if ($block['enable'])
-                        {{--  @if ($block['registered'])
-                            <div class="text-center text-sm text-white rounded-lg p-3 bg-red-700">
-                                {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
-                            </div>
-                        @else  --}}
                         <div @class([
                             'border text-center text-sm text-white rounded-lg p-3 cursor-pointer',
                             'bg-green-700' => $block['enable'] && !$block['selected'],
@@ -19,7 +14,6 @@
                         ]) wire:click="selectBlock('{{ $index }}')">
                             {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
                         </div>
-                        {{--  @endif  --}}
                     @else
                         <div class="text-center text-sm text-white rounded-lg p-3 bg-gray-500">
                             {{ $block['start']?->format('H:i') }} - {{ $block['end']?->format('H:i') }}
@@ -61,8 +55,8 @@
                                 <input type="checkbox" wire:key="{{ $surcharge['id'] }}" wire:model.live="selectedSurcharges" wire:click="chonPhuThuKhongBatBuoc('{{ $surcharge['id'] }}')" value="{{ $surcharge['id'] }}"
                                 class = "absolute left-0 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 {{ $surcharge['bat_buoc'] ? 'text-gray-300' : 'text-indigo-600' }}" {{ $surcharge['bat_buoc'] ? 'disabled' : '' }}>
                             </td>
-                            <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900 ">{{ $surcharge['ten_phu_thu'] }} {{ $surcharge['selected'] }}</td>
-                            <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900 ">{{ moneyFormat($surcharge['muc_thu']) }}{{ $surcharge['co_dinh'] ? 'đ' : '%' }}</td>
+                            <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ $surcharge['ten_phu_thu'] }}</td>
+                            <td class="whitespace-nowrap py-4 text-sm font-medium text-gray-900">{{ moneyFormat($surcharge['muc_thu']) }}{{ $surcharge['co_dinh'] ? 'đ' : '%' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -93,11 +87,11 @@
                                 <td class="relative w-12 px-2">
                                     <input type="checkbox" wire:key="{{ $itemKey }}" wire:model.live="selectedItems.{{ $month }}" wire:click="xuLyDangKyTienIch('{{ $month }}', '{{ $itemKey }}')" value="{{ $itemKey }}" class="absolute left-0 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 {{ $item['bat_buoc'] ? 'text-gray-300' : 'text-indigo-600' }}" {{ $item['bat_buoc'] || $item['disabled'] ? 'disabled' : '' }}>
                                 </td>
-                                <td class="whitespace-nowrap py-4 text-sm font-medium ">{{ $item['ngay']->format('d/m/Y') }}</td>
-                                <td class="whitespace-nowrap py-4 text-sm font-medium ">{{ $item['mo_ta'] }} - registered:{{ $item['registered'] }} - disabled:{{ $item['disabled'] }} - selected:{{ $item['selected'] }}</td>
-                                <td class="whitespace-nowrap py-4 text-sm font-medium ">{{ $item['so_luong'] }}</td>
-                                <td class="whitespace-nowrap py-4 text-sm font-medium ">{{ moneyFormat($item['muc_thu']) }}{{ $item['co_dinh'] ? 'đ' : '%' }}</td>
-                                <td class="whitespace-nowrap py-4 text-sm font-medium ">{{ moneyFormat($item['thanh_tien']) }}đ</td>
+                                <td class="whitespace-nowrap py-4 text-sm font-medium">{{ $item['ngay']->format('d/m/Y') }}</td>
+                                <td class="whitespace-nowrap py-4 text-sm font-medium">{{ $item['mo_ta'] }}</td>
+                                <td class="whitespace-nowrap py-4 text-sm font-medium">{{ $item['so_luong'] }}</td>
+                                <td class="whitespace-nowrap py-4 text-sm font-medium">{{ moneyFormat($item['muc_thu']) }}{{ $item['co_dinh'] ? 'đ' : '%' }}</td>
+                                <td class="whitespace-nowrap py-4 text-sm font-medium">{{ moneyFormat($item['thanh_tien']) }}đ</td>
                             </tr>
                         </tbody>
                     @endforeach
@@ -117,7 +111,6 @@
                             <td scope="row" class="font-normal text-gray-500">Tổng tiền</td>
                             <td class="py-2 text-gray-500">{{ moneyFormat($invoices[$month]['tong_tien']) }}</td>
                         </tr>
-
                     </tfoot>
                 </table>
             </div>

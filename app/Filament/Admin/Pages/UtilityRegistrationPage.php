@@ -203,7 +203,8 @@ class UtilityRegistrationPage extends Page
                             ->live(),
                         DateRangePicker::make('dates')
                             ->setAutoApplyOption(true)
-                            ->format('d/m/Y'),
+                            ->format('d/m/Y')
+                            ->live(),
                         Select::make('week')
                             ->options([
                                 '1' => 'Thứ 2',
@@ -238,9 +239,11 @@ class UtilityRegistrationPage extends Page
         }
     }
 
-    public function updatingDates($date)
+    public function updatedDates()
     {
-        dd($this->dates);
+        if ($this->dates) {
+            $this->resetUtility();
+        }
     }
 
     public function resetUtility()
@@ -508,7 +511,6 @@ class UtilityRegistrationPage extends Page
             });
             $this->invoiceables[$month] = $this->invoiceables[$month]->merge($selected);
         }
-        // $this->capNhatNgayDaDangKy();
         $this->tinhTien();
     }
 

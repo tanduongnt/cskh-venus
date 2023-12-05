@@ -81,7 +81,7 @@ class RegistrationResource extends Resource
                 TextColumn::make('apartment.ma_can_ho')->label('Mã căn hộ'),
                 TextColumn::make('customer.ho_va_ten')->label('Người đăng ký'),
                 TextColumn::make('mo_ta')->label('Mô tả'),
-                TextColumn::make('tong_tien')->label('Tổng tiền'),
+                TextColumn::make('tong_tien')->formatStateUsing(fn (string $state): string => moneyFormat($state).'đ')->label('Tổng tiền'),
                 IconColumn::make('da_thanh_toan')->boolean()->label('Đã thanh toán'),
             ])
             ->filters([
