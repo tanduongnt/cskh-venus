@@ -117,7 +117,7 @@ class UtilityRegistrationPage extends Page
                             ->required()
                             ->searchPrompt('Tìm theo tên chung cư')
                             ->label('Tên chung cư')
-                            ->columnSpan(2),
+                            ->columnSpan('full'),
 
                         Select::make('apartment_id')
                             ->options(fn (Get $get): Collection =>  $this->apartments->where('building_id', $get('building_id'))->pluck('ma_can_ho', 'id'))
@@ -148,7 +148,8 @@ class UtilityRegistrationPage extends Page
                             ->searchable()
                             ->required()
                             ->searchPrompt('Tìm theo tên hoặc mã căn hộ')
-                            ->label('Tên căn hộ'),
+                            ->label('Tên căn hộ')
+                            ->columnSpan(1),
 
                         Select::make('customer_id')
                             ->options(fn (Get $get): Collection => $this->customers->pluck('ho_va_ten', 'id'))
@@ -170,11 +171,12 @@ class UtilityRegistrationPage extends Page
                             ->searchable()
                             ->required()
                             ->searchPrompt('Tìm theo tên chủ hộ hoặc người được ủy quyền')
-                            ->label('Người đăng ký'),
+                            ->label('Người đăng ký')
+                            ->columnSpan(1),
                         Select::make('utility_type_id')
                             ->options(fn (Get $get): Collection => $this->utility_types->pluck('ten_loai_tien_ich', 'id'))
                             ->live()
-                            ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
+                            ->afterStateUpdated(function (Get $get, Set $set) {
                                 $this->utilities = collect();
                                 if ($get('utility_type_id')) {
                                     $this->utilities = Utility::withWhereHas('building', function ($query) use ($get) {
@@ -200,11 +202,12 @@ class UtilityRegistrationPage extends Page
                             ->required()
                             ->searchPrompt('Tìm theo tên tiện ích')
                             ->label('Tiện ích')
-                            ->live(),
+                            ->live()
+                            ->columnSpan(1),
                         DateRangePicker::make('dates')
                             ->setAutoApplyOption(true)
                             ->format('d/m/Y')
-                            ->live(),
+                            ->hidden(fn (Get $get): bool => !$get('utility_id')),
                         Select::make('week')
                             ->options([
                                 '1' => 'Thứ 2',
@@ -216,19 +219,12 @@ class UtilityRegistrationPage extends Page
                                 '0' => 'Chủ nhật',
                             ])
                             ->multiple()
-                            ->default(['1', '2', '3', '4', '5', '6', '0'])
+                            ->live()
                             ->native(false)
-                            ->label('Ngày trong tuần'),
+                            ->label('Ngày trong tuần')
+                            ->hidden(fn (Get $get): bool => !$get('utility_id')),
                     ])
-                    ->label('Đăng ký tiện ích'),
-
-                Fieldset::make('date')
-                    ->label('')
-                    ->schema([
-                        TextInput::make('customer_id'),
-                        TextInput::make('utility_id'),
-                    ]),
-                //->hidden(fn (Get $get): bool => !$get('utility_id')),
+                    ->label('Đăng ký tiện ích')->columns(2),
             ]);
     }
 
@@ -241,7 +237,14 @@ class UtilityRegistrationPage extends Page
 
     public function updatedDates()
     {
-        if ($this->dates) {
+        if ($this->utility_id) {
+            $this->resetUtility();
+        }
+    }
+
+    public function updatedWeek()
+    {
+        if ($this->utility_id) {
             $this->resetUtility();
         }
     }
@@ -691,7 +694,6 @@ class UtilityRegistrationPage extends Page
                         if ($registedInvoiceable > 0) {
                             $this->resetUtility();
                             Notification::make()->title('Đã có người đăng ký thời gian này')->danger()->send();
-                            dd($registedInvoiceable, $utility);
                             break 2;
                         } else {
                             $utilities[] = [

@@ -81,7 +81,7 @@
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Thành tiền</th>
                         </tr>
                     </thead>
-                    @foreach ($itemList->sortByDesc('loai')->sortBy('ngay') as $itemKey => $item)
+                    @foreach ($itemList->sortBy('mo_ta')->sortByDesc('loai')->sortBy('ngay') as $itemKey => $item)
                         <tbody class="divide-y divide-gray-200 bg-white {{ $item['registered'] ? 'text-red-500' : ' text-gray-900' }}">
                             <tr>
                                 <td class="relative w-12 px-2">
