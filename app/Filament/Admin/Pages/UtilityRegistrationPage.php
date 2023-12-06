@@ -18,8 +18,6 @@ use App\Models\Registration;
 use Illuminate\Support\Collection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Fieldset;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
@@ -205,6 +203,7 @@ class UtilityRegistrationPage extends Page
                             ->live()
                             ->columnSpan(1),
                         DateRangePicker::make('dates')
+                            ->required()
                             ->setAutoApplyOption(true)
                             ->format('d/m/Y')
                             ->hidden(fn (Get $get): bool => !$get('utility_id')),
@@ -218,6 +217,7 @@ class UtilityRegistrationPage extends Page
                                 '6' => 'Thứ 7',
                                 '0' => 'Chủ nhật',
                             ])
+                            ->required()
                             ->multiple()
                             ->live()
                             ->native(false)
@@ -586,13 +586,17 @@ class UtilityRegistrationPage extends Page
         })->count();
         if ($item['loai'] === 'Utility') {
             $this->invoiceables[$month]->transform(function ($value, $key) use ($ngayDangKy, $trangThai, $count, $itemKey) {
+                // Nếu số lượng phiếu thu lớn hơn 1
                 if ($count > 1) {
+                    // Chỉ đổi selected của item được chọn
                     if ($key === $itemKey) {
                         $value['selected'] = $trangThai;
                     }
                 } else {
+                    // Nếu nhỏ hơn 1 thì đổi tất cả value có ngày giống ngày đăng ký
                     if ($value['ngay']->isSameDay($ngayDangKy)) {
                         $value['selected'] = !$value['registered'] ? $trangThai : !$value['registered'];
+                        // đổi disable cho phụ thu không bắt buộc
                         if ($value['loai'] === 'Surcharge' && !$value['bat_buoc']) {
                             $value['disabled'] = !$value['selected'];
                         }
@@ -731,8 +735,6 @@ class UtilityRegistrationPage extends Page
                             ]);
                         }
                     }
-                } else {
-                    continue;
                 }
             }
             if ($registedInvoiceable == 0) {
