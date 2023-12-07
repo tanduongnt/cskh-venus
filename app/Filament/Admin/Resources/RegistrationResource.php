@@ -13,10 +13,14 @@ use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Resources\RelationManagers\RelationGroup;
 use App\Filament\Admin\Resources\RegistrationResource\Pages;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 use App\Filament\Admin\Resources\RegistrationResource\RelationManagers;
+use App\Models\UtilityType;
 
 class RegistrationResource extends Resource
 {
@@ -51,10 +55,13 @@ class RegistrationResource extends Resource
                     Select::make('customer_id')
                         ->relationship(name: 'customer', titleAttribute: 'ho_va_ten')
                         ->label('Người đăng ký'),
+                    Select::make('customers')
+                        ->multiple()
+                        ->relationship(name: 'members', titleAttribute: 'ho_va_ten')
+                        ->label('Thành viên'),
                     DateTimePicker::make('thoi_gian_dang_ky')
                         ->required()
                         ->native(false)
-                        ->minutesStep(30)
                         ->displayFormat('d/m/Y H:i')
                         ->label('Ngày đăng ký'),
                 ])->columnSpan(2),
@@ -79,11 +86,39 @@ class RegistrationResource extends Resource
                 TextColumn::make('apartment.ma_can_ho')->label('Mã căn hộ'),
                 TextColumn::make('customer.ho_va_ten')->label('Người đăng ký'),
                 TextColumn::make('mo_ta')->label('Mô tả'),
-                TextColumn::make('tong_tien')->formatStateUsing(fn (string $state): string => moneyFormat($state).'đ')->label('Tổng tiền'),
+                TextColumn::make('tong_tien')->formatStateUsing(fn (string $state): string => moneyFormat($state) . 'đ')->label('Tổng tiền'),
                 IconColumn::make('da_thanh_toan')->boolean()->label('Đã thanh toán'),
-            ])
+            ])->defaultSort('created_at', 'DESC')
             ->filters([
-                //
+                DateRangeFilter::make('thoi_gian_dang_ky')->label('Thời gian đăng ký')->withIndicator(),
+                SelectFilter::make('apartment_id')
+                    ->relationship('apartment', 'ma_can_ho')
+                    ->searchable()
+                    ->preload()
+                    ->multiple()
+                    ->label('Mã căn hộ'),
+                SelectFilter::make('utilityTypes')
+                    ->query(function (Builder $query, array $data) {
+                        if ($data['value']) {
+                            $query->whereHas('utilityTypes', function ($query) use ($data) {
+                                $query->where('utility_types.id', $data['value']);
+                            });
+                        }
+                    })
+                    ->getSearchResultsUsing(function (string $search) {
+                        return UtilityType::where('ten_loai_tien_ich', 'LIKE', "%{$search}%")->limit(10)->pluck('ten_loai_tien_ich', 'id');
+                    })
+                    ->getOptionLabelUsing(fn ($value): ?string => UtilityType::find($value)?->ten_loai_tien_ich)
+                    ->searchable()
+                    ->preload()
+                    ->indicateUsing(function (array $data): ?string {
+                        if (!$data['value']) {
+                            return null;
+                        }
+                        $utility_type = UtilityType::find($data['value'])?->ten_loai_tien_ich;
+                        return 'Loại tiện ích: ' . $utility_type;
+                    })
+                    ->label('Loại tiện ích'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

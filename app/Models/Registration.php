@@ -12,6 +12,7 @@ class Registration extends Model
 {
     use HasFactory;
     use HasUuids;
+    use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
     protected $fillable = [
         'apartment_id',
@@ -67,5 +68,10 @@ class Registration extends Model
     public function apartment(): BelongsTo
     {
         return $this->belongsTo(Apartment::class);
+    }
+
+    public function utilityTypes()
+    {
+        return $this->hasManyDeep(UtilityType::class, ['registration_utility', Utility::class], ['registration_id', 'id', 'id'], [null, 'utility_id', 'utility_type_id']);
     }
 }

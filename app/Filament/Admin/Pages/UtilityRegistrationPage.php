@@ -50,6 +50,7 @@ class UtilityRegistrationPage extends Page
 
     public $dates;
     public $week;
+    public $selectedCustomerId;
     public $selectedSurcharges = [];
     public $surchargeList = [];
     public $selectedItems = [];
@@ -115,7 +116,7 @@ class UtilityRegistrationPage extends Page
                             ->required()
                             ->searchPrompt('Tìm theo tên chung cư')
                             ->label('Tên chung cư')
-                            ->columnSpan('full'),
+                            ->columnSpan(1),
 
                         Select::make('apartment_id')
                             ->options(fn (Get $get): Collection =>  $this->apartments->where('building_id', $get('building_id'))->pluck('ma_can_ho', 'id'))
@@ -170,6 +171,13 @@ class UtilityRegistrationPage extends Page
                             ->required()
                             ->searchPrompt('Tìm theo tên chủ hộ hoặc người được ủy quyền')
                             ->label('Người đăng ký')
+                            ->columnSpan(1),
+                        Select::make('selectedCustomerId')
+                            ->searchable()
+                            ->multiple()
+                            ->getSearchResultsUsing(fn (string $search): array => Customer::where('ho_va_ten', 'like', "%{$search}%")->limit(50)->pluck('ho_va_ten', 'id')->toArray())
+                            ->getOptionLabelsUsing(fn (array $values): array => Customer::whereIn('id', $values)->pluck('ho_va_ten', 'id')->toArray())
+                            ->label('Thành viên')
                             ->columnSpan(1),
                         Select::make('utility_type_id')
                             ->options(fn (Get $get): Collection => $this->utility_types->pluck('ten_loai_tien_ich', 'id'))
@@ -593,12 +601,18 @@ class UtilityRegistrationPage extends Page
                         $value['selected'] = $trangThai;
                     }
                 } else {
-                    // Nếu nhỏ hơn 1 thì đổi tất cả value có ngày giống ngày đăng ký
                     if ($value['ngay']->isSameDay($ngayDangKy)) {
-                        $value['selected'] = !$value['registered'] ? $trangThai : !$value['registered'];
-                        // đổi disable cho phụ thu không bắt buộc
-                        if ($value['loai'] === 'Surcharge' && !$value['bat_buoc']) {
-                            $value['disabled'] = !$value['selected'];
+                        if ($value['loai'] === 'Surcharge') {
+                            $value['selected'] = !$value['registered'] ? $trangThai : !$value['registered'];
+                            // đổi disable cho phụ thu không bắt buộc
+                            if (!$value['bat_buoc']) {
+                                $value['disabled'] = !$value['selected'];
+                            }
+                        } else {
+                            $value['selected'] = $value['selected'];
+                            if ($key === $itemKey) {
+                                $value['selected'] = $trangThai;
+                            }
                         }
                     }
                 }
@@ -725,14 +739,21 @@ class UtilityRegistrationPage extends Page
                         for ($i = 0; $i < count($utilities); $i++) {
                             $registration->utilities()->attach($this->utility_id, $utilities[$i]);
                         }
-                        foreach ($danhSachPhuThu as $surcharge) {
-                            $registration->surcharges()->attach($surcharge['id'], [
-                                'thoi_gian' => $surcharge['ngay'],
-                                'mo_ta' => $surcharge['mo_ta'],
-                                'so_luong' => $surcharge['so_luong'],
-                                'muc_thu' => $surcharge['muc_thu'],
-                                'thanh_tien' => $surcharge['thanh_tien'],
-                            ]);
+                        if ($danhSachPhuThu) {
+                            foreach ($danhSachPhuThu as $surcharge) {
+                                $registration->surcharges()->attach($surcharge['id'], [
+                                    'thoi_gian' => $surcharge['ngay'],
+                                    'mo_ta' => $surcharge['mo_ta'],
+                                    'so_luong' => $surcharge['so_luong'],
+                                    'muc_thu' => $surcharge['muc_thu'],
+                                    'thanh_tien' => $surcharge['thanh_tien'],
+                                ]);
+                            }
+                        }
+                        if ($this->selectedCustomerId) {
+                            foreach ($this->selectedCustomerId as $customerId) {
+                                $registration->members()->attach($customerId);
+                            }
                         }
                     }
                 }

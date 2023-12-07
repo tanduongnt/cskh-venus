@@ -20,9 +20,7 @@ class SurchargesRelationManager extends RelationManager
 
     protected static ?string $title = 'Chi tiết phụ thu';
 
-    protected static ?string $pluralModelLabel = 'Chi tiết phụ thu';
-
-    protected static ?string $modelLabel = 'Chi tiết phụ thu';
+    protected static ?string $modelLabel = 'phụ thu';
 
     public function form(Form $form): Form
     {
@@ -38,6 +36,7 @@ class SurchargesRelationManager extends RelationManager
     {
         return $table
             //->recordTitleAttribute('ten_phu_thu')
+            ->emptyStateDescription('')
             ->columns([
                 TextColumn::make('thoi_gian')->dateTime('d/m/Y')->label('Thời gian'),
                 TextColumn::make('mo_ta')->label('Mô tả'),
