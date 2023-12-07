@@ -50,7 +50,7 @@ class UtilityRegistrationPage extends Page
 
     public $dates;
     public $week;
-    public $selectedCustomerId;
+    public $customerIds;
     public $selectedSurcharges = [];
     public $surchargeList = [];
     public $selectedItems = [];
@@ -58,6 +58,7 @@ class UtilityRegistrationPage extends Page
     public ?Collection $buildings;
     public ?Collection $apartments;
     public ?Collection $customers;
+    public ?Collection $selectedCustomerId;
     public ?Collection $utilities;
     public ?Collection $utility_types;
     public ?Utility $utility;
@@ -73,6 +74,7 @@ class UtilityRegistrationPage extends Page
         $this->buildings = Building::all();
         $this->apartments = collect();
         $this->customers = collect();
+        $this->selectedCustomerId = collect();
         $this->utility_types = collect();
         $this->utilities = collect();
         $this->week = ['1', '2', '3', '4', '5', '6', '0'];
@@ -95,6 +97,7 @@ class UtilityRegistrationPage extends Page
                             ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
                                 $this->apartments = collect();
                                 $this->utility_types = collect();
+                                $this->selectedCustomerId = collect();
                                 if ($get('building_id')) {
                                     $this->apartments = Apartment::where('building_id', $get('building_id'))->get();
 
@@ -103,12 +106,19 @@ class UtilityRegistrationPage extends Page
                                             $query->where('id', $get('building_id'));
                                         });
                                     })->get();
+
+                                    $this->selectedCustomerId = Customer::whereHas('buildings', function ($query) use ($get) {
+                                        $query->where('buildings.id', $get('building_id'));
+                                    })->pluck('id');
                                     if ($this->apartments->count() > 0) {
                                         $set('apartment_id', null);
                                     }
                                     if ($this->utility_types->count() > 0) {
                                         $set('utility_type_id', null);
                                         $set('utility_id', null);
+                                    }
+                                    if ($this->selectedCustomerId->count() > 0) {
+                                        $set('customerIds', null);
                                     }
                                 }
                             })
@@ -172,10 +182,17 @@ class UtilityRegistrationPage extends Page
                             ->searchPrompt('Tìm theo tên chủ hộ hoặc người được ủy quyền')
                             ->label('Người đăng ký')
                             ->columnSpan(1),
-                        Select::make('selectedCustomerId')
-                            ->searchable()
+                        Select::make('customerIds')
                             ->multiple()
-                            ->getSearchResultsUsing(fn (string $search): array => Customer::where('ho_va_ten', 'like', "%{$search}%")->limit(50)->pluck('ho_va_ten', 'id')->toArray())
+                            ->native(false)
+                            ->live()
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (String $search): array => Customer::whereIn('id', $this->selectedCustomerId)->where(function ($query) use ($search) {
+                                $query->withWhereHas('apartments', function ($query) use ($search) {
+                                    $query->where('ma_can_ho', 'like', "%{$search}%");
+                                });
+                                $query->orWhere('ho_va_ten', 'like', "%{$search}%");
+                            })->limit(50)->pluck('ho_va_ten', 'id')->toArray())
                             ->getOptionLabelsUsing(fn (array $values): array => Customer::whereIn('id', $values)->pluck('ho_va_ten', 'id')->toArray())
                             ->label('Thành viên')
                             ->columnSpan(1),
@@ -750,8 +767,8 @@ class UtilityRegistrationPage extends Page
                                 ]);
                             }
                         }
-                        if ($this->selectedCustomerId) {
-                            foreach ($this->selectedCustomerId as $customerId) {
+                        if ($this->customerIds) {
+                            foreach ($this->customerIds as $customerId) {
                                 $registration->members()->attach($customerId);
                             }
                         }
