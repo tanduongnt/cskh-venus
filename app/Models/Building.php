@@ -5,9 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Building extends Model
@@ -16,14 +14,11 @@ class Building extends Model
     use HasUuids;
 
     protected $fillable = [
-        'name',
-        'address',
-        'floor',
-        'apartment',
-        'area',
-        'investor',
-        'description',
-        'sort',
+        'ten_toa_nha',
+        'phi_quan_ly',
+        'thue_vat',
+        'so_luong_uy_quyen',
+        'sap_xep',
         'active',
     ];
 

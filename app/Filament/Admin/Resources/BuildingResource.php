@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources;
 
-use Filament\Forms;
 use Filament\Tables;
 use App\Models\Building;
 use Filament\Forms\Form;
@@ -11,20 +10,13 @@ use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
-use Filament\Support\Enums\ActionSize;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\ActionGroup;
-use Filament\Forms\Components\RichEditor;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Enums\ActionsPosition;
 use App\Filament\Admin\Resources\UtilityResource;
-use App\Extend\Filament\Columns\ChildResourceLink;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\BuildingResource\Pages;
-use App\Extend\Filament\Table\Actions\LinkToChildrenAction;
-use App\Filament\Admin\Resources\BuildingResource\RelationManagers;
 
 class BuildingResource extends Resource
 {
@@ -99,7 +91,6 @@ class BuildingResource extends Resource
                 //
             ])
             ->actions([
-                //LinkToChildrenAction::make(UtilityResource::class)->forChildResource(UtilityResource::class)->label('Hệ thống'),
                 Action::make('apartments')
                     ->url(fn (Building $record): string => ApartmentResource::getUrl('index', ['building' => $record->id]))
                     ->openUrlInNewTab()

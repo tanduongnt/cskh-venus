@@ -32,16 +32,19 @@ class Apartment extends Model
         return $this->belongsTo(Building::class);
     }
 
+    // khách hàng được ủy quyền
     public function customers(): BelongsToMany
     {
         return $this->belongsToMany(Customer::class)->withPivot(['vai_tro', 'duoc_uy_quyen', 'customer_id']);
     }
 
+    // khách hàng là chủ hộ
     public function owners(): BelongsToMany
     {
         return $this->belongsToMany(Customer::class)->withPivot(['vai_tro'])->wherePivot('vai_tro', ApartmentCustomerRole::OWNER);
     }
 
+    // khách hàng là thành viên
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(Customer::class)->withPivot(['vai_tro'])->wherePivot('vai_tro', ApartmentCustomerRole::MEMBER);

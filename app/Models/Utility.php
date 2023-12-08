@@ -32,6 +32,7 @@ class Utility extends Model
     ];
 
     protected $casts = [
+        'cho_phep_dang_ky' => 'boolean',
         'active' => 'boolean',
     ];
 

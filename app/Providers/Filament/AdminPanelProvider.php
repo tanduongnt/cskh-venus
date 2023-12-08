@@ -2,25 +2,18 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Pages;
 use Filament\Panel;
 use App\Models\User;
-use Filament\Widgets;
-use App\Models\Building;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use App\Filament\Admin\Pages\Customer;
 use App\Filament\Admin\Pages\Dashboard;
 use Filament\Navigation\NavigationItem;
 use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\Authenticate;
-use Filament\Navigation\NavigationBuilder;
 use App\Filament\Admin\Resources\UserResource;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use App\Filament\Admin\Pages\RegistrationUtility;
 use App\Filament\Admin\Pages\UtilityRegistrationPage;
 use App\Filament\Admin\Resources\BuildingResource;
 use App\Filament\Admin\Resources\CustomerResource;
@@ -84,7 +77,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationItem::make('utility_types')
                     ->group('Cài đặt')
                     ->url(fn (): string => UtilityTypeResource::getUrl())
-                    ->icon('heroicon-o-presentation-chart-line')
+                    ->icon('bi-calculator')
                     ->label('Loại tiện ích')
                     ->hidden(fn (): bool => !can('utility_type.view')),
                 NavigationItem::make('users')
@@ -113,6 +106,7 @@ class AdminPanelProvider extends PanelProvider
 
     public function boot()
     {
+        // SuperAdmin
         Gate::before(function (User $user, string $ability) {
             return $user->isSuperAdmin() ? true : null;
         });

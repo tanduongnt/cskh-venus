@@ -23,7 +23,7 @@ class Customer extends Authenticatable
     protected $fillable = [
         'ho_va_ten',
         'email',
-        'phone',
+        'so_dien_thoai',
         'password',
     ];
 

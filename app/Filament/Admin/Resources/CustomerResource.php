@@ -2,16 +2,13 @@
 
 namespace App\Filament\Admin\Resources;
 
-use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Set;
 use App\Models\Building;
 use App\Models\Customer;
 use Filament\Forms\Form;
-use Filament\Pages\Page;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
@@ -20,10 +17,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\CustomerResource\Pages;
-use App\Filament\Admin\Resources\CustomerResource\RelationManagers;
 
 class CustomerResource extends Resource
 {

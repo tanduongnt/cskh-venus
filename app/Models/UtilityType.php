@@ -13,9 +13,9 @@ class UtilityType extends Model
     use HasUuids;
 
     protected $fillable = [
-        'name',
-        'description',
-        'sort',
+        'ten_loai_tien_ich',
+        'mo_ta',
+        'sap_xep',
     ];
 
     public function utilities(): HasMany

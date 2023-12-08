@@ -183,17 +183,21 @@ class UtilityRegistrationPage extends Page
                             ->label('Người đăng ký')
                             ->columnSpan(1),
                         Select::make('customerIds')
-                            ->multiple()
-                            ->native(false)
-                            ->live()
-                            ->searchable()
+                            // Tìm kiếm theo tên, số điện thoại khách hàng và mã căn hộ
                             ->getSearchResultsUsing(fn (String $search): array => Customer::whereIn('id', $this->selectedCustomerId)->where(function ($query) use ($search) {
                                 $query->withWhereHas('apartments', function ($query) use ($search) {
                                     $query->where('ma_can_ho', 'like', "%{$search}%");
                                 });
                                 $query->orWhere('ho_va_ten', 'like', "%{$search}%");
+                                $query->orWhere('so_dien_thoai', 'like', "%{$search}%");
                             })->limit(50)->pluck('ho_va_ten', 'id')->toArray())
+                            // Hiển thị label bằng ho_va_ten
                             ->getOptionLabelsUsing(fn (array $values): array => Customer::whereIn('id', $values)->pluck('ho_va_ten', 'id')->toArray())
+                            // Ghi chú tìm kiếm
+                            ->searchPrompt('Tìm theo tên khách hàng, số điện thoại hoặc mã căn hộ')
+                            ->multiple()
+                            ->searchable()
+                            ->native(false)
                             ->label('Thành viên')
                             ->columnSpan(1),
                         Select::make('utility_type_id')
@@ -747,7 +751,7 @@ class UtilityRegistrationPage extends Page
                             'apartment_id' => $this->apartment_id,
                             'customer_id' => $this->customer_id,
                             'thoi_gian_dang_ky' => Carbon::parse(now())->format('Y-m-d H:i'),
-                            'mo_ta' => ucfirst(strtolower("Đăng ký tiện ích {$this->utility->utilityType->ten_loai_tien_ich} ({$this->utility->ten_tien_ich})")),
+                            'mo_ta' => ucfirst(strtolower("Đăng ký sử dụng {$this->utility->utilityType->ten_loai_tien_ich} ({$this->utility->ten_tien_ich})")),
                             'phi_dang_ky' => $invoices[$month]['phi_dang_ky'],
                             'phu_thu' => $invoices[$month]['phi_phu_thu'],
                             'tong_tien' => $invoices[$month]['tong_tien'],

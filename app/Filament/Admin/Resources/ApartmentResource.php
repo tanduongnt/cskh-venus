@@ -2,32 +2,20 @@
 
 namespace App\Filament\Admin\Resources;
 
-use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Get;
-use Filament\Forms\Set;
-use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Models\Apartment;
 use Filament\Tables\Table;
-use Filament\Resources\Resource;
-use Illuminate\Support\Collection;
-use App\Enums\ApartmentCustomerRole;
-use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use App\Extend\Filament\NestedResource;
-use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Validation\Rules\Unique;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\RichEditor;
-use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Admin\Resources\BuildingResource;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\ApartmentResource\Pages;
 use App\Filament\Admin\Resources\ApartmentResource\RelationManagers;
 

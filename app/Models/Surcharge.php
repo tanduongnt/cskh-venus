@@ -16,15 +16,17 @@ class Surcharge extends Model
         'utility_id',
         'ten_phu_thu',
         'muc_thu',
-        'mac_dinh',
+        'bat_buoc',
         'co_dinh',
-        'thu_theo_block'
+        'thu_theo_block',
+        'active'
     ];
 
     protected $casts = [
         'co_dinh' => 'boolean',
         'mac_dinh' => 'boolean',
         'thu_theo_block' => 'boolean',
+        'active' => 'boolean',
     ];
 
     public function utility(): BelongsTo

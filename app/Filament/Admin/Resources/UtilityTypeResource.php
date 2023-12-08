@@ -2,21 +2,16 @@
 
 namespace App\Filament\Admin\Resources;
 
-use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\UtilityType;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\UtilityTypeResource\Pages;
-use App\Filament\Admin\Resources\UtilityTypeResource\RelationManagers;
 
 class UtilityTypeResource extends Resource
 {

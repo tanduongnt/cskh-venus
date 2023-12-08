@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 
+// dùng cho phân quyền
 if (!function_exists('can')) {
     /**
      * Check if a user has permission or not
@@ -19,6 +20,7 @@ if (!function_exists('can')) {
     }
 }
 
+// Không phải vai trò SuperAdmin
 if (!function_exists('notSuperAdmin')) {
     function notSuperAdmin()
     {
@@ -26,6 +28,7 @@ if (!function_exists('notSuperAdmin')) {
     }
 }
 
+// Từ ngày đến ngày
 if (!function_exists('getBetweenDates')) {
     function getBetweenDates($startDate, $endDate)
     {
@@ -40,6 +43,7 @@ if (!function_exists('getBetweenDates')) {
     }
 }
 
+// Nhóm ngày theo tháng
 if (!function_exists('groupDatesByMonth')) {
     function groupDatesByMonth($startDate, $endDate)
     {
@@ -58,6 +62,7 @@ if (!function_exists('groupDatesByMonth')) {
     }
 }
 
+// định dạng tiền tệ
 if (!function_exists('moneyFormat')) {
     function moneyFormat($number)
     {
