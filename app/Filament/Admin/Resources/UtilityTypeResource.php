@@ -22,6 +22,8 @@ class UtilityTypeResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 2;
 
+    protected static ?string $breadcrumb = 'Loại tiện ích';
+
     protected static ?string $recordTitleAttribute = 'ten_loai_tien_ich';
 
 
@@ -30,10 +32,10 @@ class UtilityTypeResource extends Resource
         return false;
     }
 
-    public static function getPluralModelLabel(): string
-    {
-        return 'Loại tiện ích';
-    }
+    // public static function getPluralModelLabel(): string
+    // {
+    //     return 'Loại tiện ích';
+    // }
 
     public static function form(Form $form): Form
     {

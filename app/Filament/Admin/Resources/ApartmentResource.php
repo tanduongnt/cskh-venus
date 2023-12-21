@@ -27,6 +27,8 @@ class ApartmentResource extends NestedResource
 
     protected static ?string $slug = 'apartments';
 
+    protected static ?string $breadcrumb = 'Căn hộ';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function shouldRegisterNavigation(): bool
@@ -37,11 +39,6 @@ class ApartmentResource extends NestedResource
     public static function getParent(): string
     {
         return BuildingResource::class;
-    }
-
-    public static function getPluralModelLabel(): string
-    {
-        return 'Căn hộ';
     }
 
     public static function form(Form $form): Form

@@ -25,6 +25,7 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 3;
+    protected static ?string $breadcrumb = 'Nhân viên';
 
     protected static ?string $recordTitleAttribute = 'name';
 

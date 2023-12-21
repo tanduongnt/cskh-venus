@@ -30,6 +30,8 @@ class UtilityResource extends NestedResource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $breadcrumb = 'Tiện ích';
+
     protected static ?int $navigationSort = 3;
 
     public static function getPluralModelLabel(): string

@@ -25,18 +25,15 @@ class RegistrationResource extends Resource
 {
     protected static ?string $model = Registration::class;
 
-    protected static ?string $recordTitleAttribute = '';
+    protected static ?string $recordTitleAttribute = 'mo_ta';
 
     protected static ?string $slug = 'registration';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?string $breadcrumb = 'Phiếu thu tiện ích';
 
-    public static function getPluralModelLabel(): string
-    {
-        return 'Phiếu thu tiện ích';
-    }
+    protected static ?int $navigationSort = 4;
 
     public static function shouldRegisterNavigation(): bool
     {

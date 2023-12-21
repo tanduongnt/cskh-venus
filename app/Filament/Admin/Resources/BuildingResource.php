@@ -26,6 +26,8 @@ class BuildingResource extends Resource
 
     protected static ?string $slug = 'buildings';
 
+    protected static ?string $breadcrumb = 'Chung cư';
+
     protected static ?int $navigationSort = 1;
 
 
@@ -34,10 +36,10 @@ class BuildingResource extends Resource
         return false;
     }
 
-    public static function getPluralModelLabel(): string
-    {
-        return 'Chung cư';
-    }
+    // public static function getPluralModelLabel(): string
+    // {
+    //     return 'Chung cư';
+    // }
 
     public static function form(Form $form): Form
     {

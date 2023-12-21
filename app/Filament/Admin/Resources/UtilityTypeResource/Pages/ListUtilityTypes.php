@@ -10,6 +10,8 @@ class ListUtilityTypes extends ListRecords
 {
     protected static string $resource = UtilityTypeResource::class;
 
+    protected static ?string $title = 'Loại tiện ích';
+
     protected function getHeaderActions(): array
     {
         return [

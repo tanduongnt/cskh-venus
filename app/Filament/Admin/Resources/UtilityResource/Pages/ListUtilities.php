@@ -13,6 +13,8 @@ class ListUtilities extends ListRecords
 
     protected static string $resource = UtilityResource::class;
 
+    protected static ?string $title = 'Tiện ích';
+
     protected function getHeaderActions(): array
     {
         return [
